@@ -1,0 +1,6 @@
+# Add bin directory to gitignore
+bin/
+
+# Go build artifacts
+tools/preflight/preflight
+tools/preflight/preflight.exe

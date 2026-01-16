@@ -1,0 +1,155 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+env:
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  GCP_REGION: us-central1
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    environment: dev
+    
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        run: |
+          cd terraform/environments/dev
+          terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd terraform/environments/dev
+          terraform plan -out=tfplan \
+            -var="project_id=${{ env.GCP_PROJECT_ID }}" \
+            -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
+
+      - name: Terraform Apply
+        run: |
+          cd terraform/environments/dev
+          terraform apply -auto-approve tfplan
+
+      - name: Get Service URL
+        id: service-url
+        run: |
+          cd terraform/environments/dev
+          echo "url=$(terraform output -raw service_url)" >> $GITHUB_OUTPUT
+
+      - name: Run Health Check
+        run: |
+          chmod +x scripts/healthcheck.sh
+          ./scripts/healthcheck.sh ${{ steps.service-url.outputs.url }}
+
+      - name: Notify Deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Dev deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
+    environment: prod
+    
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_PROD }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        run: |
+          cd terraform/environments/prod
+          terraform init
+
+      - name: Terraform Plan
+        run: |
+          cd terraform/environments/prod
+          terraform plan -out=tfplan \
+            -var="project_id=${{ env.GCP_PROJECT_ID }}" \
+            -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
+
+      - name: Terraform Apply
+        run: |
+          cd terraform/environments/prod
+          terraform apply -auto-approve tfplan
+
+      - name: Get Service URL
+        id: service-url
+        run: |
+          cd terraform/environments/prod
+          echo "url=$(terraform output -raw service_url)" >> $GITHUB_OUTPUT
+
+      - name: Run Health Check
+        run: |
+          chmod +x scripts/healthcheck.sh
+          ./scripts/healthcheck.sh ${{ steps.service-url.outputs.url }}
+
+      - name: Run Backup
+        run: |
+          chmod +x scripts/backup.sh
+          ./scripts/backup.sh
+
+      - name: Notify Deployment
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment ${{ job.status }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow

@@ -1,0 +1,156 @@
+{
+  "dashboard": {
+    "title": "Keystone - Service Overview",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(run_googleapis_com_request_count[5m])",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Error Rate",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "rate(run_googleapis_com_request_count{response_code_class=\"5xx\"}[5m])",
+            "legendFormat": "5xx Errors"
+          },
+          {
+            "expr": "rate(run_googleapis_com_request_count{response_code_class=\"4xx\"}[5m])",
+            "legendFormat": "4xx Errors"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Response Latency (p95)",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(run_googleapis_com_request_latencies_bucket[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(run_googleapis_com_request_latencies_bucket[5m]))",
+            "legendFormat": "p99"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Container Instances",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "run_googleapis_com_container_instance_count",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "CPU Utilization",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "run_googleapis_com_container_cpu_utilization",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Memory Utilization",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 16,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "run_googleapis_com_container_memory_utilization",
+            "legendFormat": "{{service_name}}"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Connections",
+        "type": "graph",
+        "gridPos": {
+          "x": 0,
+          "y": 24,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "cloudsql_googleapis_com_database_postgresql_num_backends",
+            "legendFormat": "Active Connections"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Database CPU",
+        "type": "graph",
+        "gridPos": {
+          "x": 12,
+          "y": 24,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "expr": "cloudsql_googleapis_com_database_cpu_utilization",
+            "legendFormat": "CPU Utilization"
+          }
+        ]
+      }
+    ]
+  }
+}
