@@ -34,6 +34,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate Identity
+        run: |
+          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then
+            echo "::error::WIF_PROVIDER Secret is missing. Authentication will fail."
+            echo "::error::Please run 'make setup-wif' locally and add the output to GitHub Secrets."
+            exit 1
+          fi
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -97,6 +105,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Validate Identity
+        run: |
+          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then
+            echo "::error::WIF_PROVIDER Secret is missing. Authentication will fail."
+            echo "::error::Please run 'make setup-wif' locally and add the output to GitHub Secrets."
+            exit 1
+          fi
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
