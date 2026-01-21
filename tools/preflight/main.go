@@ -115,6 +115,12 @@ func main() {
 			Required:    false,
 			Check:       checkTerraformFormatted,
 		},
+		{
+			Name:        "kms-keyring-check",
+			Description: "KMS Keyring exists if needed",
+			Required:    false,
+			Check:       checkKMSKeyringExists,
+		},
 	}
 
 	report := runChecks(checks)
@@ -400,19 +406,20 @@ func checkStateBucketExists() CheckResult {
 		}
 	}
 
-	bucketName := fmt.Sprintf("keystone-terraform-state-%s", environment)
+	// Use the dynamic naming convention from bootstrap.sh
+	bucketName := fmt.Sprintf("keystone-tf-state-%s-%s", projectID, environment)
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "gsutil", "ls", "-b", "gs://"+bucketName)
+	cmd := exec.CommandContext(ctx, "gcloud", "storage", "buckets", "describe", "gs://"+bucketName, "--project="+projectID)
 	err := cmd.Run()
 	
 	if err != nil {
 		return CheckResult{
 			Passed:  false,
 			Message: "Terraform state bucket does not exist",
-			Details: fmt.Sprintf("Create with: gsutil mb gs://%s", bucketName),
+			Details: fmt.Sprintf("Run 'make bootstrap ENV=%s' to create it", environment),
 		}
 	}
 
@@ -420,6 +427,35 @@ func checkStateBucketExists() CheckResult {
 		Passed:  true,
 		Message: "Terraform state bucket exists",
 		Details: fmt.Sprintf("Bucket: gs://%s", bucketName),
+	}
+}
+
+func checkKMSKeyringExists() CheckResult {
+	if environment != "prod" {
+		return CheckResult{Passed: true, Message: "KMS check skipped (non-prod)"}
+	}
+
+	keyringName := fmt.Sprintf("configra-prod-keyring")
+	region := "us-central1"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "gcloud", "kms", "keyrings", "describe", keyringName,
+		"--location="+region, "--project="+projectID)
+	
+	if err := cmd.Run(); err != nil {
+		return CheckResult{
+			Passed:  false,
+			Message: "Production KMS Keyring not found",
+			Details: "Infrastructure may need initial apply to create Keyring",
+		}
+	}
+
+	return CheckResult{
+		Passed:  true,
+		Message: "KMS Keyring exists",
+		Details: keyringName,
 	}
 }
 

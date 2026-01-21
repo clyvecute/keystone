@@ -48,8 +48,10 @@ resource "google_cloud_run_service" "app" {
 
     metadata {
       annotations = {
-        "autoscaling.knative.dev/minScale" = var.min_instances
-        "autoscaling.knative.dev/maxScale" = var.max_instances
+        "autoscaling.knative.dev/minScale"        = var.min_instances
+        "autoscaling.knative.dev/maxScale"        = var.max_instances
+        "run.googleapis.com/vpc-access-connector" = var.vpc_connector_id
+        "run.googleapis.com/vpc-access-egress"    = "all-traffic"
       }
     }
   }
@@ -95,4 +97,34 @@ resource "google_project_iam_member" "app_metrics" {
   project = var.project_id
   role    = "roles/monitoring.metricWriter"
   member  = "serviceAccount:${google_service_account.app.email}"
+}
+
+# Grant Secret Manager access to service account
+resource "google_project_iam_member" "app_secret_accessor" {
+  project = var.project_id
+  role    = "roles/secretmanager.secretAccessor"
+  member  = "serviceAccount:${google_service_account.app.email}"
+}
+
+# Binary Authorization policy for container image verification
+resource "google_binary_authorization_policy" "policy" {
+  count = var.enable_binary_authorization ? 1 : 0
+
+  admission_whitelist_patterns {
+    name_pattern = "gcr.io/${var.project_id}/*"
+  }
+
+  default_admission_rule {
+    evaluation_mode  = var.environment == "prod" ? "REQUIRE_ATTESTATION" : "ALWAYS_ALLOW"
+    enforcement_mode = "ENFORCED_BLOCK_AND_AUDIT_LOG"
+    
+    dynamic "require_attestations_by" {
+      for_each = var.environment == "prod" ? [1] : []
+      content {
+        attestation_authority_note = var.attestation_authority_note
+      }
+    }
+  }
+
+  global_policy_evaluation_mode = "ENABLE"
 }

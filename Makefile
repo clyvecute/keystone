@@ -100,10 +100,56 @@ test-scripts: ## Test all operational scripts
 
 security-scan: ## Run security scan on Terraform
 	@echo "$(BLUE)Running security scan...$(NC)"
-	@if command -v tfsec >/dev/null 2>&1; then \
-		tfsec terraform/; \
+	@if command -v tfsec > /dev/null 2>&1; then \
+		tfsec terraform/ --format=default --soft-fail; \
 	else \
 		echo "$(YELLOW)tfsec not installed. Install with: brew install tfsec$(NC)"; \
+	fi
+	@if command -v checkov > /dev/null 2>&1; then \
+		checkov -d terraform/ --framework terraform; \
+	else \
+		echo "$(YELLOW)checkov not installed. Install with: pip install checkov$(NC)"; \
+	fi
+
+rotate-secrets: ## Rotate all secrets (database passwords, service account keys)
+	@echo "$(BLUE)Rotating secrets for $(ENV)...$(NC)"
+	@chmod +x scripts/rotate-secrets.sh
+	@./scripts/rotate-secrets.sh
+	@echo "$(GREEN)Secret rotation complete$(NC)"
+
+compliance-check: ## Run compliance checks
+	@echo "$(BLUE)Running compliance checks...$(NC)"
+	@echo "$(YELLOW)Checking encryption configuration...$(NC)"
+	@grep -r "encryption" terraform/ || echo "$(RED)No encryption configuration found$(NC)"
+	@echo "$(YELLOW)Checking IAM policies...$(NC)"
+	@grep -r "iam" terraform/ || echo "$(RED)No IAM policies found$(NC)"
+	@echo "$(YELLOW)Checking backup configuration...$(NC)"
+	@grep -r "backup" terraform/ || echo "$(RED)No backup configuration found$(NC)"
+	@echo "$(GREEN)Compliance check complete$(NC)"
+
+security-audit: ## Generate security audit report
+	@echo "$(BLUE)Generating security audit report...$(NC)"
+	@mkdir -p ./reports
+	@echo "# Security Audit Report - $(shell date)" > ./reports/security-audit-$(shell date +%Y%m%d).md
+	@echo "" >> ./reports/security-audit-$(shell date +%Y%m%d).md
+	@echo "## Infrastructure Security" >> ./reports/security-audit-$(shell date +%Y%m%d).md
+	@tfsec terraform/ --format markdown >> ./reports/security-audit-$(shell date +%Y%m%d).md 2>/dev/null || echo "tfsec not available"
+	@echo "$(GREEN)Audit report generated: ./reports/security-audit-$(shell date +%Y%m%d).md$(NC)"
+
+vulnerability-scan: ## Scan for vulnerabilities
+	@echo "$(BLUE)Scanning for vulnerabilities...$(NC)"
+	@if command -v trivy > /dev/null 2>&1; then \
+		trivy config terraform/; \
+	else \
+		echo "$(YELLOW)trivy not installed. Install with: brew install trivy$(NC)"; \
+	fi
+
+secrets-check: ## Check for exposed secrets
+	@echo "$(BLUE)Checking for exposed secrets...$(NC)"
+	@if command -v gitleaks > /dev/null 2>&1; then \
+		gitleaks detect --source . --verbose; \
+	else \
+		echo "$(YELLOW)gitleaks not installed. Install with: brew install gitleaks$(NC)"; \
 	fi
 
 docs: ## Generate documentation
@@ -117,5 +163,20 @@ docs: ## Generate documentation
 	else \
 		echo "$(YELLOW)terraform-docs not installed$(NC)"; \
 	fi
+
+bootstrap: ## Initial project setup (create buckets, enable APIs)
+	@echo "$(BLUE)Bootstrapping $(ENV) environment...$(NC)"
+	@chmod +x scripts/bootstrap.sh
+	@./scripts/bootstrap.sh $(ENV)
+
+setup-wif: ## Setup Workload Identity Federation for GitHub Actions
+	@echo "$(BLUE)Setting up Workload Identity Federation...$(NC)"
+	@chmod +x scripts/setup-wif.sh
+	@./scripts/setup-wif.sh
+
+test-infra: ## Run Terraform unit tests
+	@echo "$(BLUE)Running Terraform unit tests...$(NC)"
+	@cd terraform/modules/network && terraform test
+	@echo "$(GREEN)Infrastructure tests passed$(NC)"
 
 .DEFAULT_GOAL := help

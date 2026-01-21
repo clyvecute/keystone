@@ -13,6 +13,16 @@ output "subnet_id" {
   value       = google_compute_subnetwork.subnet.id
 }
 
+output "security_policy_id" {
+  description = "Cloud Armor security policy ID"
+  value       = google_compute_security_policy.policy.id
+}
+
+output "connector_id" {
+  description = "VPC Serverless Connector ID"
+  value       = google_vpc_access_connector.connector.id
+}
+
 output "subnet_name" {
   description = "Subnet name"
   value       = google_compute_subnetwork.subnet.name

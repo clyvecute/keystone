@@ -83,3 +83,9 @@ variable "deletion_protection" {
   type        = bool
   default     = true
 }
+
+variable "kms_key_name" {
+  description = "KMS key name for encryption (null for Google-managed encryption)"
+  type        = string
+  default     = null
+}

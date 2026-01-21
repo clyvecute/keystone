@@ -1,285 +1,168 @@
 # Keystone
 
-**The load-bearing layer beneath Configra.**
+**The Enterprise-Grade Infrastructure Foundation for Configra.**
 
-Keystone exists to prove one thing: **you know how production systems are built, deployed, observed, and recovered.**
+Keystone is a battle-hardened Infrastructure-as-Code (IaC) repository designed for high-availability, zero-trust security, and observability. It demonstrates how to move beyond simple deployments into **production-grade operations**.
 
-This is not an app. This is not a demo. This is infrastructure that works.
-
----
-
-## What Makes Keystone Different
-
-**Most portfolios show you can deploy. Keystone shows you can operate.**
-
-### 🚀 Go Preflight Checker
-Custom-built Go utility that validates environment readiness before deployment. Catches issues before they become incidents. [See tools/preflight/](tools/preflight/)
-
-### 💥 Failure-First Documentation  
-Documents how things **break**, not just how they work. Real failure scenarios with recovery procedures. [See docs/how-things-break.md](docs/how-things-break.md)
-
-### 💰 Cost Awareness
-Detailed cost analysis ($25/month dev, $425/month prod) with ROI justification. Shows you think like someone who manages budgets. [See docs/cost-analysis.md](docs/cost-analysis.md)
-
-### 🎯 Explicit Non-Goals
-Clear scope boundaries. States what we intentionally don't do and why. Shows restraint and pragmatism. [See Non-Goals](#non-goals)
-
-**→ [Read why these matter](docs/STANDOUT.md)**
+[![Security Scan](https://github.com/yourusername/keystone/actions/workflows/security-scan.yml/badge.svg)](https://github.com/yourusername/keystone/actions/workflows/security-scan.yml)
+[![Infrastructure Tests](https://github.com/yourusername/keystone/actions/workflows/test.yml/badge.svg)](https://github.com/yourusername/keystone/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## What This Is
+## What Makes Keystone Different?
 
-Keystone is a production-ready infrastructure repository demonstrating:
+**Most portfolios show you can deploy. Keystone shows you can *operate*.**
 
-- **Infrastructure as Code** with Terraform
-- **CI/CD pipelines** with GitHub Actions
-- **Monitoring and observability** with Prometheus-compatible metrics and Grafana
-- **Operational scripts** for backup, restore, and health validation
-- **Security best practices** with IAM roles and secret management
-- **Failure recovery** procedures and runbooks
+*   **Go Preflight Engineer:** A custom binary that performs deep inspection of your GCP environment *before* Terraform runs. It catches quota issues, API gaps, and credential lapses before they become outages.
+*   **Zero-Trust Security:** Includes Cloud Armor (WAF/DDoS), Binary Authorization, egress filtering, and Customer-Managed Encryption Keys (CMEK) via KMS.
+*   **Verified Infrastructure:** Not just "valid" HCL—we use `terraform test` to programmatically verify security invariants (like ensuring no public SSH access) before resources are provisioned.
+*   **Economic Awareness:** Integrated `Infracost` in CI/CD to provide automated cost transparency on every PR, treating budget as a first-class engineering constraint.
+*   **Failure-First Documentation:** While others document how it works, we document how it **breaks** and how to fix it via professional runbooks.
+
+---
+
+## System Architecture
+
+```mermaid
+graph TD
+    subgraph "GCP Project"
+        subgraph "VPC Network (Private)"
+            CR[Cloud Run - Application]
+            VPC_CONN[VPC Serverless Connector]
+            DB[(Cloud SQL - PostgreSQL)]
+            KMS[KMS - CMEK Encryption]
+        end
+        
+        subgraph "Security Layer"
+            CA[Cloud Armor - WAF/DDoS]
+            BA[Binary Authorization]
+            SM[Secret Manager]
+        end
+        
+        subgraph "Observability Layer"
+            MON[Cloud Monitoring Dashboards]
+            LOG[Cloud Logging / Audit Sinks]
+            BQ[BigQuery - Long-term Audit]
+        end
+    end
+    
+    User((External User)) --> CA
+    CA --> CR
+    CR --> VPC_CONN
+    VPC_CONN --> DB
+    SM -.-> CR
+    KMS -.-> DB
+    CR -.-> MON
+```
+
+---
+
+## Features & Capabilities
+
+### Security & Compliance
+- **Identity:** Workload Identity Federation for GitHub Actions (Zero Service Account Keys).
+- **Encryption:** All data at rest in Cloud SQL/GCS is encrypted using **KMS** with 90-day automated rotation.
+- **WAF:** **Cloud Armor** with OWASP ModSecurity rules against SQLi and XSS.
+- **Network:** Private Google Access, egress firewall filtering, and VPC service connectors.
+- **Audit:** Automated BigQuery log sinks for long-term security forensics.
+
+### Observability
+- **Dashboards-as-Code:** Automated provisioning of Cloud Monitoring dashboards (latency, error rates, DB backends).
+- **Proactive Alerting:** Pre-configured SLIs for 5xx errors and p95 latency thresholds.
+- **Health Validation:** Custom Go-based health checkers and automated uptime monitors.
+
+### Advanced IaC
+- **Modular Design:** Decoupled modules for `network`, `compute`, `database`, `security`, and `monitoring`.
+- **Environment Isolation:** Strict separation between `dev` and `prod` utilizing remote state locking.
+- **CI/CD Hygiene:** Multi-stage pipelines including `trufflehog` secrets detection and `trivy` vulnerability scanning.
 
 ---
 
 ## Repository Structure
 
-```
+```text
 keystone/
-├─ terraform/          # Infrastructure as Code
-│  ├─ environments/    # Environment-specific configs
-│  ├─ modules/         # Reusable infrastructure modules
-│  ├─ backend.tf       # Remote state configuration
-│  ├─ providers.tf     # Cloud provider setup
-│  └─ variables.tf     # Global variables
-│
-├─ ci/                 # CI/CD pipelines
-│  └─ github-actions/  # GitHub Actions workflows
-│
-├─ scripts/            # Operational automation
-│  ├─ backup.sh        # Backup procedures
-│  ├─ restore.sh       # Restore procedures
-│  └─ healthcheck.sh   # Health validation
-│
-├─ monitoring/         # Observability
-│  ├─ dashboards/      # Grafana dashboards
-│  └─ alerts/          # Alert configurations
-│
-└─ docs/               # Documentation
-   ├─ architecture.md  # System design
-   ├─ deployment.md    # Deployment procedures
-   └─ failure-scenarios.md  # Incident response
+├── terraform/
+│   ├── modules/           # Reusable Infrastructure Components
+│   │   ├── security/      # KMS, Audit Sinks, IAM
+│   │   ├── network/       # VPC, Cloud Armor, VPC Connectors
+│   │   ├── compute/       # Cloud Run, Binary Auth
+│   │   └── monitoring/    # Dashboards, Alerting
+│   └── environments/      # Environment-specific Overlays (Dev/Prod)
+├── tools/
+│   └── preflight/         # Go-based Environment Validator
+├── scripts/
+│   ├── bootstrap.sh       # Day-Zero project setup automation
+│   ├── rotate-secrets.sh  # Automated secret rotation utility
+│   └── backup.sh          # Encrypted backup automation
+├── .github/workflows/     # CI/CD (Cost, Security, Testing, Deployment)
+└── docs/                  # Professional Operations Manuals
 ```
 
 ---
 
-## Tech Stack
+## The 5-Minute Setup
 
-### Infrastructure & Cloud
-- **Terraform** - Industry-standard IaC
-- **GCP Cloud Run** - Serverless container platform (or AWS EC2 for traditional compute)
-- **GCS/S3** - Object storage for state, backups, and artifacts
+### 1. Prerequisites
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+- [Terraform >= 1.5](https://developer.hashicorp.com/terraform/downloads)
 
-### CI/CD
-- **GitHub Actions** - Universal, auditable, no vendor lock-in
-- Pipeline stages: lint → test → build → deploy → health check
-
-### Monitoring & Observability
-- **Prometheus-compatible metrics** - From Configra endpoints
-- **Grafana dashboards** - Visualization and alerting
-- **Cloud-native logging** - Cloud Logging (GCP) or CloudWatch (AWS)
-
-### Automation & Ops
-- **Shell scripts** - Backup, restore, health validation
-- **Makefile** - Single entry point for local operations
-
-### Security
-- **Environment variables only** - No secrets in repo
-- **IAM roles** - Minimal permissions, explicit policies
-- **Terraform remote state** - Locked and versioned
-
----
-
-## Quick Start
-
-### Prerequisites
-- Terraform >= 1.5
-- GCP account with billing enabled (or AWS)
-- GitHub repository with Actions enabled
-- `gcloud` CLI configured (or `aws` CLI)
-
-### Local Setup
-
+### 2. High-Speed Bootstrap
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/keystone.git
-cd keystone
-
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your values
-# Then source it
-source .env
-
-# Initialize Terraform
-make init
-
-# Plan infrastructure changes
-make plan
-
-# Apply infrastructure
-make apply
+# Initialize project, enable APIs, and create state buckets
+make bootstrap ENV=dev
 ```
 
-### Deploy to Production
-
+### 3. Verify & Plan
 ```bash
-# Deploy via CI/CD (recommended)
-git push origin main
+# Run the Go preflight checker to ensure environment readiness
+make preflight ENV=dev
 
-# Or deploy manually
-make deploy-prod
+# Run automated infrastructure tests
+make test-infra
+
+# Generate cost-aware infrastructure plan
+make plan ENV=dev
 ```
 
----
-
-## Operations
-
-### Backup
+### 4. Deploy
 ```bash
-make backup
-```
-
-### Restore
-```bash
-make restore BACKUP_ID=<timestamp>
-```
-
-### Health Check
-```bash
-make health
-```
-
-### View Logs
-```bash
-make logs ENV=prod
+make apply ENV=dev
 ```
 
 ---
 
-## Monitoring
+## Day-2 Operations
 
-Access Grafana dashboards:
-- **Dev**: `http://localhost:3000`
-- **Prod**: `https://monitoring.yourdomain.com`
-
-Default credentials are in your `.env` file.
-
----
-
-## Documentation
-
-- [Architecture](docs/architecture.md) - System design and component overview
-- [Deployment](docs/deployment.md) - Step-by-step deployment guide
-- [Failure Scenarios](docs/failure-scenarios.md) - Incident response runbooks
+| Task | Command | Document |
+|:---|:---|:---|
+| **Secret Rotation** | `make rotate-secrets` | [`docs/security.md`](docs/security.md) |
+| **Identity Setup** | `make setup-wif` | [`docs/deployment.md`](docs/deployment.md) |
+| **System Backup** | `make backup` | [`docs/deployment.md`](docs/deployment.md) |
+| **Recovery** | `make restore BACKUP_ID=...` | [`docs/failure-scenarios.md`](docs/failure-scenarios.md) |
+| **Security Audit** | `make security-audit` | [`docs/security-incident-response.md`](docs/security-incident-response.md) |
 
 ---
 
-## Why This Exists
+## Explicit Non-Goals
 
-Keystone demonstrates **real-world readiness**:
-
-1. **Terraform isolation** - Infrastructure is readable and maintainable
-2. **Explicit CI logic** - Every pipeline stage is auditable
-3. **Operational thinking** - Scripts show you understand day-2 operations
-4. **Failure awareness** - Docs prove you understand recovery, not just deployment
-
-This repository signals maturity, discipline, and production experience.
+Keystone is intentionally focused to ensure simplicity and cost-effectiveness:
+- **No Kubernetes:** Overkill for this application; Cloud Run provides superior serverless management.
+- **No Multi-Cloud:** Focuses on deepening GCP expertise rather than shallow multi-cloud support.
+- **No Zero-Downtime DB Migrations:** Managed via maintenance windows to reduce complexity.
+- **Single-Region:** Optimized for cost ($425/mo prod) over redundant multi-region availability.
 
 ---
 
-## Non-Goals
+## Documentation Index
 
-**Keystone intentionally does NOT solve everything. Here's what we don't do:**
-
-### What We Don't Provide
-
-❌ **Multi-Region Deployment**
-- Why: Adds significant complexity and cost (3-5x)
-- Alternative: Single-region with cross-region backups
-- When to add: When uptime SLA requires it (99.99%+)
-
-❌ **Kubernetes**
-- Why: Overkill for most applications
-- Alternative: Cloud Run (serverless, simpler, cheaper)
-- When to add: When you need stateful workloads or custom networking
-
-❌ **Service Mesh (Istio, Linkerd)**
-- Why: Unnecessary complexity for single-service architecture
-- Alternative: Cloud Run's built-in traffic management
-- When to add: When you have 10+ microservices
-
-❌ **Custom Monitoring Stack (Prometheus + Grafana)**
-- Why: Cloud Monitoring is sufficient and integrated
-- Alternative: Cloud Monitoring with Grafana dashboards (optional)
-- When to add: When you need custom metrics or on-prem monitoring
-
-❌ **CI/CD for Multiple Applications**
-- Why: Keystone is infrastructure for Configra specifically
-- Alternative: Adapt workflows for your application
-- When to add: When you have multiple services to deploy
-
-❌ **Development Environment Parity**
-- Why: Dev is intentionally cheaper (scales to zero, smaller DB)
-- Alternative: Staging environment for production-like testing
-- When to add: When you need exact prod replication for testing
-
-❌ **Advanced Networking (VPN, Interconnect)**
-- Why: Not needed for cloud-native applications
-- Alternative: Cloud Run's built-in networking
-- When to add: When connecting to on-prem systems
-
-❌ **Compliance Certifications (SOC2, HIPAA, PCI-DSS)**
-- Why: Requires additional controls and audits
-- Alternative: GCP provides compliant infrastructure
-- When to add: When your business requires it
-
-❌ **Multi-Cloud (AWS + GCP + Azure)**
-- Why: Vendor lock-in is acceptable for simplicity
-- Alternative: GCP-native services
-- When to add: When business requires multi-cloud (rare)
-
-❌ **Zero-Downtime Database Migrations**
-- Why: Requires complex blue-green database setup
-- Alternative: Maintenance windows for schema changes
-- When to add: When you can't afford any downtime
-
-### Why We're Explicit About This
-
-1. **Scope Control** - Prevents feature creep
-2. **Cost Awareness** - Each feature has a cost
-3. **Complexity Management** - Simpler is better
-4. **Honest Communication** - Set clear expectations
-5. **Future Roadmap** - Know what to add when needed
-
-### When to Extend Keystone
-
-Add features when:
-- ✅ Business requirements demand it
-- ✅ Cost is justified by value
-- ✅ Team has capacity to maintain it
-- ✅ Simpler alternatives have been exhausted
-
-Don't add features because:
-- ❌ "It would be cool"
-- ❌ "Other companies do it"
-- ❌ "It's best practice" (without context)
-- ❌ "We might need it someday"
-
-**Keystone is intentionally focused. This is a feature, not a limitation.**
+- [Architecture](docs/architecture.md) - Deep dive into system design.
+- [Deployment](docs/deployment.md) - End-to-end setup and migration guide.
+- [Security](docs/security.md) - Compliance, encryption, and network strategy.
+- [How Things Break](docs/how-things-break.md) - A "failure-first" look at the system.
+- [Incident Response](docs/security-incident-response.md) - Security breach runbooks.
 
 ---
 
-## License
-
-MIT
+**Built by Keystone Engineering.** Licensed under MIT.

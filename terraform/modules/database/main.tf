@@ -13,6 +13,11 @@ resource "google_sql_database_instance" "main" {
     disk_size         = var.disk_size
     disk_type         = var.disk_type
 
+    # Explicit encryption configuration for compliance
+    disk_encryption_configuration {
+      kms_key_name = var.kms_key_name
+    }
+
     backup_configuration {
       enabled                        = true
       start_time                     = "03:00"
@@ -36,6 +41,9 @@ resource "google_sql_database_instance" "main" {
       update_track = "stable"
     }
 
+    # Enable automated minor version upgrades
+    activation_policy = "ALWAYS"
+    
     insights_config {
       query_insights_enabled  = true
       query_string_length     = 1024
@@ -43,6 +51,7 @@ resource "google_sql_database_instance" "main" {
       record_client_address   = true
     }
 
+    # Security and audit logging flags
     database_flags {
       name  = "log_checkpoints"
       value = "on"
@@ -55,6 +64,33 @@ resource "google_sql_database_instance" "main" {
 
     database_flags {
       name  = "log_disconnections"
+      value = "on"
+    }
+
+    # Binary logging for audit trail
+    database_flags {
+      name  = "cloudsql.enable_pgaudit"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "pgaudit.log"
+      value = "all"
+    }
+
+    # Additional security flags
+    database_flags {
+      name  = "log_statement"
+      value = "ddl" # Log all DDL statements
+    }
+
+    database_flags {
+      name  = "log_min_duration_statement"
+      value = "1000" # Log queries taking > 1s
+    }
+
+    database_flags {
+      name  = "log_lock_waits"
       value = "on"
     }
   }

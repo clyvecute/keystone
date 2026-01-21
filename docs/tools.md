@@ -19,14 +19,14 @@ Keystone includes custom-built tools to enhance operational workflows.
 
 ### Features
 
-- ✅ Checks gcloud CLI installation and authentication
-- ✅ Verifies Terraform version compatibility
-- ✅ Validates GCP project configuration
-- ✅ Confirms required APIs are enabled
-- ✅ Checks state bucket existence
-- ✅ Validates Terraform formatting
-- ✅ JSON output for CI/CD integration
-- ✅ Clear pass/fail with actionable messages
+- Checks gcloud CLI installation and authentication
+- Verifies Terraform version compatibility
+- Validates GCP project configuration
+- Confirms required APIs are enabled
+- Checks state bucket existence
+- Validates Terraform formatting
+- JSON output for CI/CD integration
+- Clear pass/fail with actionable messages
 
 ### Usage
 
@@ -66,32 +66,32 @@ make preflight && make apply ENV=prod
 ### Example Output
 
 ```
-🚀 Keystone Preflight Check
+Keystone Preflight Check
 Environment: dev
 Timestamp: 2024-01-17T03:44:43Z
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+----------------------------------------
 Preflight Check Results
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ gcloud CLI is installed
-✓ gcloud is authenticated
-  → Active account: user@example.com
-✓ Terraform is installed
-✓ Terraform version is compatible
-  → Version: 1.5.7
-✓ GCP_PROJECT_ID is set
-  → Project: my-project-id
-✓ Required APIs are enabled
-✓ Terraform state bucket exists
-  → Bucket: gs://keystone-terraform-state-dev
-⚠ Backup bucket does not exist
-  → Create with: gsutil mb gs://keystone-backups
-✓ .env file exists
-✓ Terraform files are formatted
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+----------------------------------------
+[PASS] gcloud CLI is installed
+[PASS] gcloud is authenticated
+       Active account: user@example.com
+[PASS] Terraform is installed
+[PASS] Terraform version is compatible
+       Version: 1.5.7
+[PASS] GCP_PROJECT_ID is set
+       Project: my-project-id
+[PASS] Required APIs are enabled
+[PASS] Terraform state bucket exists
+       Bucket: gs://keystone-terraform-state-dev
+[WARN] Backup bucket does not exist
+       Create with: gsutil mb gs://keystone-backups
+[PASS] .env file exists
+[PASS] Terraform files are formatted
+----------------------------------------
 Total: 10 | Passed: 9 | Failed: 0 | Warnings: 1
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✓ Ready to deploy
+----------------------------------------
+Ready to deploy
 ```
 
 ### Why This Matters

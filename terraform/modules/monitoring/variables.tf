@@ -48,7 +48,13 @@ variable "latency_threshold_ms" {
 }
 
 variable "notification_channels" {
-  description = "Notification channel IDs for alerts"
+  description = "List of notification channel IDs"
   type        = list(string)
   default     = []
+}
+
+variable "kms_key_name" {
+  description = "KMS key name for encryption"
+  type        = string
+  default     = null
 }

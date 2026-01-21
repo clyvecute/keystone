@@ -4,7 +4,7 @@ This document highlights the features that separate Keystone from typical portfo
 
 ---
 
-## 1. Go Preflight Checker 🚀
+## 1. Go Preflight Checker
 
 **Location:** `tools/preflight/`
 
@@ -14,16 +14,16 @@ A custom-built Go utility that validates environment readiness before any deploy
 ### Why It Matters
 
 **For Recruiters:**
-- ✅ Demonstrates Go proficiency (not just Terraform)
-- ✅ Shows you build tools, not just infrastructure
-- ✅ Proves operational thinking
-- ✅ Real utility, not a toy project
+- [x] Demonstrates Go proficiency (not just Terraform)
+- [x] Shows you build tools, not just infrastructure
+- [x] Proves operational thinking
+- [x] Real utility, not a toy project
 
 **For Operations:**
-- ✅ Catches configuration errors before deployment
-- ✅ Saves hours of debugging
-- ✅ Standardizes environment validation
-- ✅ Runs automatically in CI/CD
+- [x] Catches configuration errors before deployment
+- [x] Saves hours of debugging
+- [x] Standardizes environment validation
+- [x] Runs automatically in CI/CD
 
 ### Key Features
 - Validates gcloud authentication
@@ -50,7 +50,7 @@ make preflight  # Run before deployment
 
 ---
 
-## 2. Failure-First Documentation 💥
+## 2. Failure-First Documentation
 
 **Location:** `docs/how-things-break.md`
 
@@ -60,15 +60,15 @@ Comprehensive documentation of how things fail, not just how they work.
 ### Why It Matters
 
 **Most portfolios:**
-- ❌ Only document happy paths
-- ❌ Ignore failure scenarios
-- ❌ Assume everything works
+- [ ] Only document happy paths
+- [ ] Ignore failure scenarios
+- [ ] Assume everything works
 
 **Keystone:**
-- ✅ Documents real failure modes
-- ✅ Provides recovery procedures
-- ✅ Includes time-to-recover estimates
-- ✅ Shows prevention strategies
+- [x] Documents real failure modes
+- [x] Provides recovery procedures
+- [x] Includes time-to-recover estimates
+- [x] Shows prevention strategies
 
 ### Failure Scenarios Covered
 
@@ -122,7 +122,7 @@ Comprehensive documentation of how things fail, not just how they work.
 
 ---
 
-## 3. Cost Awareness 💰
+## 3. Cost Awareness
 
 **Location:** `docs/cost-analysis.md`
 
@@ -132,16 +132,16 @@ Detailed cost analysis showing you understand budgets and ROI.
 ### Why It Matters
 
 **Most portfolios:**
-- ❌ Ignore cost completely
-- ❌ Over-engineer without justification
-- ❌ Don't explain technology choices
+- [ ] Ignore cost completely
+- [ ] Over-engineer without justification
+- [ ] Don't explain technology choices
 
 **Keystone:**
-- ✅ Detailed cost breakdown by service
-- ✅ Monthly estimates (dev: $25, prod: $425)
-- ✅ Justification for each technology choice
-- ✅ Cost optimization strategies
-- ✅ ROI analysis vs. alternatives
+- [x] Detailed cost breakdown by service
+- [x] Monthly estimates (dev: $25, prod: $425)
+- [x] Justification for each technology choice
+- [x] Cost optimization strategies
+- [x] ROI analysis vs. alternatives
 
 ### What's Included
 
@@ -186,7 +186,7 @@ Detailed cost analysis showing you understand budgets and ROI.
 
 ---
 
-## 4. Explicit Non-Goals 🎯
+## 4. Explicit Non-Goals
 
 **Location:** `README.md` (Non-Goals section)
 
@@ -196,25 +196,25 @@ Clear statement of what Keystone intentionally does NOT do.
 ### Why It Matters
 
 **Most portfolios:**
-- ❌ Try to do everything
-- ❌ Add features "because it's cool"
-- ❌ No clear scope boundaries
-- ❌ Feature creep
+- [ ] Try to do everything
+- [ ] Add features "because it's cool"
+- [ ] No clear scope boundaries
+- [ ] Feature creep
 
 **Keystone:**
-- ✅ Explicit about what we don't do
-- ✅ Explains why we don't do it
-- ✅ States when to add those features
-- ✅ Shows restraint and focus
+- [x] Explicit about what we don't do
+- [x] Explains why we don't do it
+- [x] States when to add those features
+- [x] Shows restraint and focus
 
 ### What We Don't Do
 
-❌ Multi-region deployment (cost: 3-5x)
-❌ Kubernetes (overkill for single service)
-❌ Service mesh (unnecessary complexity)
-❌ Custom monitoring stack (Cloud Monitoring sufficient)
-❌ Multi-cloud (vendor lock-in acceptable)
-❌ Zero-downtime DB migrations (maintenance windows OK)
+- Multi-region deployment (cost: 3-5x)
+- Kubernetes (overkill for single service)
+- Service mesh (unnecessary complexity)
+- Custom monitoring stack (Cloud Monitoring sufficient)
+- Multi-cloud (vendor lock-in acceptable)
+- Zero-downtime DB migrations (maintenance windows OK)
 
 ### For Each Non-Goal:
 - **Why** we don't do it
@@ -244,18 +244,18 @@ Clear statement of what Keystone intentionally does NOT do.
 ## Combined Impact
 
 ### What Typical Portfolios Show:
-- ✅ "I can deploy an app"
-- ✅ "I know Terraform"
-- ✅ "I can write CI/CD"
+- [x] "I can deploy an app"
+- [x] "I know Terraform"
+- [x] "I can write CI/CD"
 
 ### What Keystone Shows:
-- ✅ "I can deploy an app" (same)
-- ✅ "I know Terraform" (same)
-- ✅ "I can write CI/CD" (same)
-- ✅ **"I build operational tools"** (Go preflight)
-- ✅ **"I've dealt with production incidents"** (failure docs)
-- ✅ **"I understand budgets and ROI"** (cost analysis)
-- ✅ **"I make pragmatic decisions"** (non-goals)
+- [x] "I can deploy an app" (same)
+- [x] "I know Terraform" (same)
+- [x] "I can write CI/CD" (same)
+- [x] **"I build operational tools"** (Go preflight)
+- [x] **"I've dealt with production incidents"** (failure docs)
+- [x] **"I understand budgets and ROI"** (cost analysis)
+- [x] **"I make pragmatic decisions"** (non-goals)
 
 ---
 

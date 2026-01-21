@@ -72,8 +72,26 @@ variable "allow_public_access" {
   default     = true
 }
 
+variable "vpc_connector_id" {
+  description = "VPC Serverless Connector ID"
+  type        = string
+  default     = null
+}
+
 variable "env_vars" {
   description = "Environment variables for the container"
   type        = map(string)
   default     = {}
+}
+
+variable "enable_binary_authorization" {
+  description = "Enable Binary Authorization for container image verification"
+  type        = bool
+  default     = false
+}
+
+variable "attestation_authority_note" {
+  description = "Attestation authority note for Binary Authorization"
+  type        = string
+  default     = ""
 }

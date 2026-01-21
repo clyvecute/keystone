@@ -14,6 +14,10 @@ resource "google_storage_bucket" "monitoring" {
     enabled = true
   }
 
+  encryption {
+    default_kms_key_name = var.kms_key_name
+  }
+
   lifecycle_rule {
     condition {
       age = 90

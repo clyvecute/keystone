@@ -29,3 +29,21 @@ variable "ssh_source_ranges" {
   type        = list(string)
   default     = ["0.0.0.0/0"] # Restrict this in production!
 }
+
+variable "rate_limit_threshold" {
+  description = "Rate limit threshold (requests per minute per IP)"
+  type        = number
+  default     = 1000
+}
+
+variable "blocked_ip_ranges" {
+  description = "IP ranges to block (known malicious IPs)"
+  type        = list(string)
+  default     = []
+}
+
+variable "connector_cidr" {
+  description = "CIDR range for VPC Serverless Connector (must be /28)"
+  type        = string
+  default     = "10.8.0.0/28"
+}

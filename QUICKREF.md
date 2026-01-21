@@ -1,6 +1,6 @@
 # Keystone Quick Reference
 
-## 🚀 Common Commands
+## Common Commands
 
 ### Infrastructure Management
 ```bash
@@ -8,54 +8,60 @@ make init ENV=dev          # Initialize Terraform
 make plan ENV=dev          # Preview changes
 make apply ENV=dev         # Apply changes
 make destroy ENV=dev       # Destroy infrastructure
+make setup-wif             # Setup GitHub Identity (WIF)
 ```
 
 ### Operations
 ```bash
-make backup                # Create backup
-make restore BACKUP_ID=... # Restore from backup
-make health                # Health check
-make logs ENV=dev          # View logs
+make backup                 # Create backup
+make restore BACKUP_ID=...  # Restore from backup
+make rotate-secrets         # Rotate all secrets
+make health                 # Health check
+make logs ENV=dev           # View logs
 ```
 
 ### Development
 ```bash
-make fmt                   # Format code
-make validate              # Validate config
-make test-scripts          # Test scripts
-make security-scan         # Security scan
+make fmt                    # Format code
+make validate               # Validate config
+make test-scripts           # Test scripts
+make security-scan          # Security scan
+make vulnerability-scan    # Scan vulnerabilities
+make secrets-check         # Check for secrets
 ```
 
-## 📂 Key Files
+## Key Files
 
 | File | Purpose |
 |------|---------|
 | `README.md` | Project overview |
 | `SETUP.md` | Complete setup guide |
 | `Makefile` | Command shortcuts |
-| `.env.example` | Environment template |
+| `docs/security.md` | Security architecture |
+| `docs/security-incident-response.md` | Security runbook |
 | `docs/architecture.md` | System design |
 | `docs/deployment.md` | Deployment guide |
 | `docs/failure-scenarios.md` | Incident runbooks |
 
-## 🏗️ Module Structure
+## Module Structure
 
 ```
 terraform/modules/
 ├── network/      # VPC, subnets, firewall
 ├── compute/      # Cloud Run services
 ├── database/     # Cloud SQL PostgreSQL
+├── security/     # KMS, IAM, Audit
 └── monitoring/   # Alerts, uptime checks
 ```
 
-## 🌍 Environments
+## Environments
 
 | Environment | Purpose | Config |
 |-------------|---------|--------|
 | `dev` | Development | `terraform/environments/dev/` |
 | `prod` | Production | `terraform/environments/prod/` |
 
-## 🔧 Scripts
+## Scripts
 
 | Script | Purpose |
 |--------|---------|
@@ -64,21 +70,21 @@ terraform/modules/
 | `healthcheck.sh` | Validate service health |
 | `verify-setup.sh` | Check repository structure |
 
-## 📊 Monitoring
+## Monitoring
 
 - **Dashboards**: `monitoring/dashboards/service-overview.json`
 - **Alerts**: `monitoring/alerts/alert-policies.md`
 - **Logs**: Cloud Logging (GCP Console)
 - **Metrics**: Cloud Monitoring (GCP Console)
 
-## 🔐 Security
+## Security
 
 - **Secrets**: Use Secret Manager, never commit
 - **IAM**: Minimal permissions, service accounts
 - **Network**: VPC, firewall rules, private IPs
 - **Encryption**: At rest (AES-256), in transit (TLS 1.2+)
 
-## 🚨 Emergency Procedures
+## Emergency Procedures
 
 ### Service Down
 ```bash
@@ -99,13 +105,13 @@ gcloud run services update-traffic SERVICE_NAME \
 gcloud logging read "resource.type=cloud_run_revision" --limit 50
 ```
 
-## 📞 Quick Links
+## Quick Links
 
 - **GCP Console**: https://console.cloud.google.com
 - **GitHub Actions**: `.github/workflows/`
 - **Terraform Docs**: https://registry.terraform.io/providers/hashicorp/google/latest/docs
 
-## 💡 Tips
+## Tips
 
 1. **Always plan before apply**: `make plan` before `make apply`
 2. **Test in dev first**: Validate changes in dev environment
@@ -113,7 +119,7 @@ gcloud logging read "resource.type=cloud_run_revision" --limit 50
 4. **Monitor deployments**: Watch logs during deploys
 5. **Document changes**: Update docs when changing infrastructure
 
-## 🎯 Next Steps
+## Next Steps
 
 1. Configure `.env` with your GCP project
 2. Create state buckets
