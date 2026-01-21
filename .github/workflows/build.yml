@@ -27,6 +27,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Validate Secrets
+        run: |
+          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then echo "::error::GCP_PROJECT_ID is missing"; exit 1; fi
+          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then echo "::error::WIF_PROVIDER is missing. Run 'make setup-wif' locally."; exit 1; fi
+          if [ -z "${{ secrets.WIF_SERVICE_ACCOUNT }}" ]; then echo "::error::WIF_SERVICE_ACCOUNT is missing. Run 'make setup-wif' locally."; exit 1; fi
+
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
