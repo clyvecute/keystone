@@ -19,6 +19,9 @@ env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   GCP_REGION: us-central1
 
+permissions:
+  contents: read
+
 jobs:
   deploy-dev:
     name: Deploy to Dev

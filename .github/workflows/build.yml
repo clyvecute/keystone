@@ -10,6 +10,9 @@ env:
   GCP_REGION: us-central1
   IMAGE_NAME: configra
 
+permissions:
+  contents: read
+
 jobs:
   build-and-push:
     name: Build and Push Container

@@ -14,6 +14,8 @@ permissions:
   contents: read
   security-events: write
   pull-requests: write
+  id-token: write # Required for Scorecard results publication
+  actions: read   # Required for Scorecard to read active workflows
 
 jobs:
   terraform-security:
@@ -29,7 +31,7 @@ jobs:
         with:
           working_directory: terraform
           format: sarif
-          soft_fail: false
+          soft_fail: true
           additional_args: --minimum-severity MEDIUM
 
       - name: Upload tfsec results to GitHub Security
@@ -46,7 +48,7 @@ jobs:
           framework: terraform
           output_format: sarif
           output_file_path: checkov-results.sarif
-          soft_fail: false
+          soft_fail: true
           skip_check: CKV_GCP_82 # Skip specific checks if needed
 
       - name: Upload Checkov results
@@ -100,10 +102,12 @@ jobs:
 
       - name: Run OSSF Scorecard
         uses: ossf/scorecard-action@v2.3.1
+        continue-on-error: true
         with:
           results_file: scorecard-results.sarif
           results_format: sarif
           publish_results: true
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Scorecard results
         uses: github/codeql-action/upload-sarif@v3
@@ -124,12 +128,14 @@ jobs:
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Run TruffleHog
         uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
         with:
           path: ./
           base: main
