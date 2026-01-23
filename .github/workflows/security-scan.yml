@@ -29,16 +29,14 @@ jobs:
       - name: Run tfsec
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
-          working_directory: terraform
-          format: sarif
+          additional_args: terraform --format sarif --out tfsec-results.sarif
           soft_fail: true
-          additional_args: --minimum-severity MEDIUM
 
       - name: Upload tfsec results to GitHub Security
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: terraform/results.sarif
+          sarif_file: tfsec-results.sarif
           category: tfsec
 
       - name: Run Checkov
@@ -47,15 +45,15 @@ jobs:
           directory: terraform
           framework: terraform
           output_format: sarif
-          output_file_path: terraform/checkov-results.sarif
+          output_file_path: checkov-results.sarif
           soft_fail: true
-          skip_check: CKV_GCP_82 # Skip specific checks if needed
+          skip_check: CKV_GCP_82
 
       - name: Upload Checkov results
         uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: terraform/checkov-results.sarif
+          sarif_file: checkov-results.sarif
           category: checkov
 
   container-security:
