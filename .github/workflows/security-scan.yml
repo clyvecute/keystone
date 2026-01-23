@@ -24,7 +24,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run tfsec
         uses: aquasecurity/tfsec-action@v1.0.3
@@ -40,7 +40,7 @@ jobs:
           category: tfsec
 
       - name: Run Checkov
-        uses: bridgecrewio/checkov-action@v12.2262.0
+        uses: bridgecrewio/checkov-action@v12.3077.0
         with:
           directory: terraform
           framework: terraform
@@ -62,10 +62,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -87,10 +87,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/iac@v0.3.0
+        uses: snyk/actions/iac@v1.0.0
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -99,7 +99,7 @@ jobs:
           args: --severity-threshold=medium
 
       - name: Run OSSF Scorecard
-        uses: ossf/scorecard-action@v2.3.1
+        uses: ossf/scorecard-action@v2.4.3
         continue-on-error: true
         with:
           results_file: scorecard-results.sarif
@@ -120,7 +120,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -132,7 +132,7 @@ jobs:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@v3.82.0
+        uses: trufflesecurity/trufflehog@v3.92.5
         continue-on-error: true
         with:
           path: ./
@@ -148,7 +148,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create security summary
         run: |
@@ -164,7 +164,7 @@ jobs:
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const output = `#### Security Scan Results 🔒
