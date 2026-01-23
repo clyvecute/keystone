@@ -35,27 +35,27 @@ jobs:
           additional_args: --minimum-severity MEDIUM
 
       - name: Upload tfsec results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: results.sarif
+          sarif_file: terraform/results.sarif
           category: tfsec
 
       - name: Run Checkov
-        uses: bridgecrewio/checkov-action@master
+        uses: bridgecrewio/checkov-action@v12.2262.0
         with:
           directory: terraform
           framework: terraform
           output_format: sarif
-          output_file_path: checkov-results.sarif
+          output_file_path: terraform/checkov-results.sarif
           soft_fail: true
           skip_check: CKV_GCP_82 # Skip specific checks if needed
 
       - name: Upload Checkov results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: checkov-results.sarif
+          sarif_file: terraform/checkov-results.sarif
           category: checkov
 
   container-security:
@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@v0.28.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -77,7 +77,7 @@ jobs:
           exit-code: '0'
 
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: trivy-results.sarif
@@ -92,7 +92,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/iac@master
+        uses: snyk/actions/iac@v0.3.0
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -110,7 +110,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Scorecard results
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: scorecard-results.sarif
@@ -134,7 +134,7 @@ jobs:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.82.0
         continue-on-error: true
         with:
           path: ./
