@@ -2,8 +2,8 @@ terraform {
   required_version = ">= 1.5"
 
   backend "gcs" {
-    bucket = "keystone-terraform-state-dev"
-    prefix = "terraform/state/dev"
+    bucket = "keystone-tf-state-PROJECT_ID-dev"
+    prefix = "terraform/state"
   }
 }
 

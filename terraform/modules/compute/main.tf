@@ -118,12 +118,7 @@ resource "google_binary_authorization_policy" "policy" {
     evaluation_mode  = var.environment == "prod" ? "REQUIRE_ATTESTATION" : "ALWAYS_ALLOW"
     enforcement_mode = "ENFORCED_BLOCK_AND_AUDIT_LOG"
     
-    dynamic "require_attestations_by" {
-      for_each = var.environment == "prod" ? [1] : []
-      content {
-        attestation_authority_note = var.attestation_authority_note
-      }
-    }
+    require_attestations_by = (var.environment == "prod" && var.attestation_authority_note != "") ? [var.attestation_authority_note] : []
   }
 
   global_policy_evaluation_mode = "ENABLE"

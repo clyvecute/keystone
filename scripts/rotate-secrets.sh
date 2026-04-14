@@ -143,7 +143,7 @@ rotate_service_account_keys() {
     
     # Delete old keys (older than 90 days)
     log_info "Checking for old keys to delete..."
-    local old_date=$(date -d "90 days ago" +%Y-%m-%d 2>/dev/null || date -v-90d +%Y-%m-%d)
+    local old_epoch=$(date -d "90 days ago" +%s 2>/dev/null || date -v-90d +%s)
     
     for key in $keys; do
         local key_id=$(basename "$key")
@@ -152,7 +152,9 @@ rotate_service_account_keys() {
             --format="value(validAfterTime)" \
             --project="$PROJECT_ID")
         
-        if [[ "$created_at" < "$old_date" ]]; then
+        local created_epoch=$(date -d "$created_at" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2>/dev/null)
+        
+        if [ "$created_epoch" -lt "$old_epoch" ]; then
             log_warning "Deleting old key: $key_id (created: $created_at)"
             gcloud iam service-accounts keys delete "$key_id" \
                 --iam-account="$sa_email" \

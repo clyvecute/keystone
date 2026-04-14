@@ -16,7 +16,7 @@ TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
 ENVIRONMENT="${APP_ENV:-dev}"
 PROJECT_ID="${GCP_PROJECT_ID:-}"
-BACKUP_BUCKET="${BACKUP_BUCKET:-keystone-backups}"
+BACKUP_BUCKET="${BACKUP_BUCKET:-keystone-backups-${PROJECT_ID}}"
 
 # Logging functions
 log_info() {
@@ -84,8 +84,8 @@ backup_database() {
 backup_terraform_state() {
     log_info "Backing up Terraform state..."
     
-    local state_bucket="keystone-terraform-state-${ENVIRONMENT}"
-    local state_prefix="terraform/state/${ENVIRONMENT}"
+    local state_bucket="keystone-tf-state-${PROJECT_ID}-${ENVIRONMENT}"
+    local state_prefix="terraform/state"
     
     gsutil -m cp -r \
         "gs://${state_bucket}/${state_prefix}/*" \

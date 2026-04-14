@@ -140,8 +140,8 @@ restore_database() {
 restore_terraform_state() {
     log_info "Restoring Terraform state..."
     
-    local state_bucket="keystone-terraform-state-${ENVIRONMENT}"
-    local state_prefix="terraform/state/${ENVIRONMENT}"
+    local state_bucket="keystone-tf-state-${PROJECT_ID}-${ENVIRONMENT}"
+    local state_prefix="terraform/state"
     
     if [ ! -d "$RESTORE_DIR/$BACKUP_ID/terraform_state" ]; then
         log_warning "No Terraform state found in backup"

@@ -308,11 +308,14 @@ func checkTerraformVersion() CheckResult {
 	}
 
 	// Simple version check (should be >= 1.5.0)
-	if strings.HasPrefix(versionInfo.TerraformVersion, "1.5") ||
-		strings.HasPrefix(versionInfo.TerraformVersion, "1.6") ||
-		strings.HasPrefix(versionInfo.TerraformVersion, "1.7") ||
-		strings.HasPrefix(versionInfo.TerraformVersion, "1.8") ||
-		strings.HasPrefix(versionInfo.TerraformVersion, "1.9") {
+	var major, minor, patch int
+	_, err = fmt.Sscanf(versionInfo.TerraformVersion, "%d.%d.%d", &major, &minor, &patch)
+	if err != nil {
+		// Fallback for versions like "1.5" without patch
+		_, err = fmt.Sscanf(versionInfo.TerraformVersion, "%d.%d", &major, &minor)
+	}
+
+	if (major > 1) || (major == 1 && minor >= 5) {
 		return CheckResult{
 			Passed:  true,
 			Message: "Terraform version is compatible",
@@ -460,7 +463,7 @@ func checkKMSKeyringExists() CheckResult {
 }
 
 func checkBackupBucketExists() CheckResult {
-	bucketName := "keystone-backups"
+	bucketName := fmt.Sprintf("keystone-backups-%s", projectID)
 	
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

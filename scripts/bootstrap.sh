@@ -58,6 +58,19 @@ else
     success "State bucket created."
 fi
 
+# 2.1 Create Backup Bucket
+BACKUP_BUCKET="keystone-backups-${PROJECT_ID}"
+log "Creating backup bucket: ${BACKUP_BUCKET}..."
+if gcloud storage buckets describe "gs://${BACKUP_BUCKET}" &>/dev/null; then
+    warn "Backup bucket already exists."
+else
+    gcloud storage buckets create "gs://${BACKUP_BUCKET}" \
+        --project="${PROJECT_ID}" \
+        --location="${REGION}" \
+        --uniform-bucket-level-access
+    success "Backup bucket created."
+fi
+
 # 3. Create .tfvars file if missing
 TFVARS_PATH="terraform/environments/${ENV}/terraform.tfvars"
 if [ ! -f "$TFVARS_PATH" ]; then

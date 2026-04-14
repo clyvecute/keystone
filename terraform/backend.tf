@@ -15,7 +15,7 @@ terraform {
   # Remote state configuration
   # Uncomment and configure after creating the state bucket
   # backend "gcs" {
-  #   bucket = "keystone-terraform-state"
+  #   bucket = "keystone-tf-state-<PROJECT_ID>-<ENV>"
   #   prefix = "terraform/state"
   # }
 }

@@ -95,9 +95,18 @@ check_response_time() {
         --max-time "$TIMEOUT" \
         "$url" || echo "999")
     
-    # Convert to milliseconds
-    response_time=$(echo "$response_time * 1000" | bc)
-    response_time=${response_time%.*}
+    # Convert to milliseconds using pure bash (seconds.microseconds format)
+    if [[ "$response_time" =~ ^([0-9]+)\.([0-9]+)$ ]]; then
+        local seconds="${BASH_REMATCH[1]}"
+        local micros="${BASH_REMATCH[2]}"
+        # Take first 3 digits of micros for millis
+        local millis="${micros:0:3}"
+        # Handle cases where micros has less than 3 digits
+        while [ ${#millis} -lt 3 ]; do millis="${millis}0"; done
+        response_time=$(( 10#$seconds * 1000 + 10#$millis ))
+    else
+        response_time=${response_time%.*}
+    fi
     
     if [ "$response_time" -lt "$max_time" ]; then
         log_success "$description (${response_time}ms)"
