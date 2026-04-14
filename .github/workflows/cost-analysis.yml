@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Infracost
-        uses: infracost/actions/setup@v3
+        uses: infracost/actions/setup@v4
         with:
           api_key: ${{ secrets.INFRACOST_API_KEY }}
 
@@ -27,7 +27,7 @@ jobs:
         run: infracost breakdown --path terraform/environments/prod --format json --out-file /tmp/infracost.json
 
       - name: Post Infracost comment
-        uses: infracost/actions/comment@v3
+        uses: infracost/actions/comment@v4
         with:
           path: /tmp/infracost.json
           behavior: update
