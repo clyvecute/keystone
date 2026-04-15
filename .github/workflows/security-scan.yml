@@ -107,7 +107,7 @@ jobs:
           persist-credentials: false
 
       - name: Run OSSF Scorecard
-        uses: ossf/scorecard-action@v2.4.0
+        uses: ossf/scorecard-action@v2.4.3
         with:
           results_file: scorecard-results.sarif
           results_format: sarif
@@ -133,7 +133,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@v3.88.0
+        uses: trufflesecurity/trufflehog@v3.94.3
         with:
           extra_args: --only-verified --results=verified
 
