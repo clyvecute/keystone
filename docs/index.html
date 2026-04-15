@@ -13,21 +13,22 @@
     :root {
       --bg:      #100320;
       --bg2:     #1A0832;
-      --accent:  #CC6EED;
-      --accent2: #A84ECB;
-      --white:   #FFFFFF;
-      --muted:   rgba(204,110,237,0.45);
-      --border:  rgba(204,110,237,0.18);
-      --green:   #6EDCA0;
-      --red:     #ED6E7A;
-      --yellow:  #EDB96E;
-      --grey:    rgba(204,110,237,0.35);
+      --accent:  rgba(204,110,237,0.32);   /* ghostly lavender */
+      --accent2: rgba(168,78,203,0.28);
+      --white:   rgba(255,255,255,0.22);   /* dim, barely-there white */
+      --muted:   rgba(204,110,237,0.16);   /* nearly invisible */
+      --border:  rgba(204,110,237,0.09);   /* ultra-subtle lines */
+      --green:   rgba(110,220,160,0.55);
+      --red:     rgba(237,110,122,0.55);
+      --yellow:  rgba(237,185,110,0.55);
+      --grey:    rgba(204,110,237,0.18);
     }
 
     html { scroll-behavior: smooth; overflow-x: hidden; }
 
     body {
       font-family: 'Inter', sans-serif;
+      font-weight: 300;
       background: var(--bg);
       color: var(--accent);
       min-height: 100vh;
@@ -151,9 +152,9 @@
     .hero-small {
       font-family: 'Inter', sans-serif;
       font-size: clamp(0.8rem, 2vw, 1.8rem);
-      font-weight: 300;
+      font-weight: 200;
       font-style: italic;
-      color: var(--muted);
+      color: rgba(204,110,237,0.12);
       letter-spacing: 0.02em;
       padding: 0 1.2vw;
     }
@@ -219,16 +220,16 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 2.4rem;
       letter-spacing: 0.04em;
-      color: var(--white);
+      color: rgba(255,255,255,0.18);
       line-height: 1;
     }
 
     .hero-stat-label {
       font-size: 0.7rem;
-      font-weight: 500;
+      font-weight: 300;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: var(--muted);
+      color: rgba(204,110,237,0.12);
       margin-top: 2px;
     }
 
@@ -264,18 +265,19 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(2.5rem, 5vw, 5rem);
       letter-spacing: 0.04em;
-      color: var(--white);
+      color: rgba(255,255,255,0.16);
       line-height: 1;
     }
 
     .section-title em {
-      color: var(--accent);
+      color: rgba(204,110,237,0.28);
       font-style: italic;
     }
 
     .section-sub {
       font-size: 0.85rem;
-      color: var(--muted);
+      font-weight: 300;
+      color: rgba(204,110,237,0.13);
       line-height: 1.8;
       max-width: 480px;
       margin-left: auto;
@@ -321,14 +323,15 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.5rem;
       letter-spacing: 0.06em;
-      color: var(--white);
+      color: rgba(255,255,255,0.18);
       margin-bottom: 8px;
       line-height: 1;
     }
 
     .pipeline-desc {
       font-size: 0.75rem;
-      color: var(--muted);
+      font-weight: 300;
+      color: rgba(204,110,237,0.11);
       line-height: 1.7;
       margin-bottom: 20px;
     }
@@ -404,14 +407,15 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.8rem;
       letter-spacing: 0.05em;
-      color: var(--white);
+      color: rgba(255,255,255,0.16);
       margin-bottom: 6px;
       line-height: 1;
     }
 
     .feature-desc {
       font-size: 0.8rem;
-      color: var(--muted);
+      font-weight: 300;
+      color: rgba(204,110,237,0.12);
       line-height: 1.7;
     }
 
@@ -471,7 +475,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.3rem;
       letter-spacing: 0.06em;
-      color: var(--white);
+      color: rgba(255,255,255,0.17);
       margin-bottom: 2px;
     }
 
@@ -503,7 +507,7 @@
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.4rem;
       letter-spacing: 0.06em;
-      color: var(--accent);
+      color: rgba(204,110,237,0.28);
       margin-bottom: 20px;
     }
 
@@ -518,13 +522,14 @@
       align-items: flex-start;
       gap: 10px;
       font-size: 0.8rem;
-      color: var(--muted);
+      font-weight: 300;
+      color: rgba(204,110,237,0.12);
       line-height: 1.5;
     }
 
     .arch-item::before {
       content: '—';
-      color: var(--accent);
+      color: rgba(204,110,237,0.18);
       flex-shrink: 0;
       margin-top: 0px;
     }

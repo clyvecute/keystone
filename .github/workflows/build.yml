@@ -18,18 +18,24 @@ jobs:
   build-and-push:
     name: Build and Push Container
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
       id-token: write
 
+    # Map secrets to env so they can be used in if: conditions
+    # (secrets context is not available in if: expressions)
+    env:
+      WIF_PROVIDER: ${{ secrets.WIF_PROVIDER }}
+      WIF_SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
       image-digest: ${{ steps.build.outputs.digest }}
-    
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Check Secrets
         run: |
@@ -38,18 +44,18 @@ jobs:
           if [ -z "${{ secrets.WIF_SERVICE_ACCOUNT }}" ]; then echo "::warning::WIF_SERVICE_ACCOUNT not set — GCP auth steps will be skipped."; fi
 
       - name: Authenticate to Google Cloud
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Configure Docker for GCR
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: gcloud auth configure-docker
 
       - name: Extract metadata
@@ -65,7 +71,7 @@ jobs:
 
       - name: Build and push Docker image
         id: build
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -76,7 +82,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Generate SBOM
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: anchore/sbom-action@v0
         with:
           image: ${{ steps.meta.outputs.tags }}
@@ -84,7 +90,7 @@ jobs:
           output-file: sbom.spdx.json
 
       - name: Upload SBOM
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: actions/upload-artifact@v4
         with:
           name: sbom
@@ -92,15 +98,15 @@ jobs:
           retention-days: 30
 
       - name: Scan image for vulnerabilities
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: aquasecurity/trivy-action@v0.35.0
         with:
           image-ref: ${{ steps.meta.outputs.tags }}
           format: 'sarif'
-          output: '${{ github.workspace }}/trivy-results.sarif'
+          output: 'trivy-results.sarif'
 
       - name: Upload Trivy results to GitHub Security
-        if: ${{ secrets.WIF_PROVIDER != '' }}
-        uses: github/codeql-action/upload-sarif@v4.35.1
+        if: env.WIF_PROVIDER != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: '${{ github.workspace }}/trivy-results.sarif'
+          sarif_file: 'trivy-results.sarif'

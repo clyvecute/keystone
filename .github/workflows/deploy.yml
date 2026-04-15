@@ -28,10 +28,16 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
     environment: dev
-    
+
     permissions:
       contents: read
       id-token: write
+
+    # Map secrets to env — secrets context cannot be used in if: expressions
+    env:
+      WIF_PROVIDER: ${{ secrets.WIF_PROVIDER }}
+      WIF_SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
     steps:
       - name: Checkout code
@@ -42,14 +48,14 @@ jobs:
           if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then echo "::warning::WIF_PROVIDER not set — GCP steps will be skipped."; fi
 
       - name: Authenticate to Google Cloud
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Setup Terraform
@@ -58,13 +64,13 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
           terraform init
 
       - name: Terraform Plan
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
           terraform plan -out=tfplan \
@@ -72,26 +78,26 @@ jobs:
             -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
 
       - name: Terraform Apply
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
           terraform apply -auto-approve tfplan
 
       - name: Get Service URL
         id: service-url
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
           echo "url=$(terraform output -raw service_url)" >> $GITHUB_OUTPUT
 
       - name: Run Health Check
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           chmod +x scripts/healthcheck.sh
           ./scripts/healthcheck.sh ${{ steps.service-url.outputs.url }}
 
       - name: Notify Deployment
-        if: always() && secrets.SLACK_WEBHOOK != ''
+        if: always() && env.SLACK_WEBHOOK != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -103,10 +109,16 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod'
     environment: prod
-    
+
     permissions:
       contents: read
       id-token: write
+
+    # Map secrets to env — secrets context cannot be used in if: expressions
+    env:
+      WIF_PROVIDER: ${{ secrets.WIF_PROVIDER }}
+      WIF_SERVICE_ACCOUNT_PROD: ${{ secrets.WIF_SERVICE_ACCOUNT_PROD }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
 
     steps:
       - name: Checkout code
@@ -117,14 +129,14 @@ jobs:
           if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then echo "::warning::WIF_PROVIDER not set — GCP steps will be skipped."; fi
 
       - name: Authenticate to Google Cloud
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_PROD }}
 
       - name: Set up Cloud SDK
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Setup Terraform
@@ -133,13 +145,13 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/prod
           terraform init
 
       - name: Terraform Plan
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/prod
           terraform plan -out=tfplan \
@@ -147,32 +159,32 @@ jobs:
             -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
 
       - name: Terraform Apply
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/prod
           terraform apply -auto-approve tfplan
 
       - name: Get Service URL
         id: service-url
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/prod
           echo "url=$(terraform output -raw service_url)" >> $GITHUB_OUTPUT
 
       - name: Run Health Check
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           chmod +x scripts/healthcheck.sh
           ./scripts/healthcheck.sh ${{ steps.service-url.outputs.url }}
 
       - name: Run Backup
-        if: ${{ secrets.WIF_PROVIDER != '' }}
+        if: env.WIF_PROVIDER != ''
         run: |
           chmod +x scripts/backup.sh
           ./scripts/backup.sh
 
       - name: Notify Deployment
-        if: always() && secrets.SLACK_WEBHOOK != ''
+        if: always() && env.SLACK_WEBHOOK != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}

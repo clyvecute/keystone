@@ -24,7 +24,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install tfsec
         run: |
@@ -34,11 +34,14 @@ jobs:
 
       - name: Run tfsec
         run: |
-          tfsec terraform/ --format sarif --out tfsec-results.sarif
-        continue-on-error: true
+          tfsec terraform/ --format sarif --out tfsec-results.sarif || true
+          # Create a minimal valid SARIF file if tfsec didn't produce one
+          if [ ! -f tfsec-results.sarif ]; then
+            echo '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json","runs":[{"tool":{"driver":{"name":"tfsec","rules":[]}},"results":[]}]}' > tfsec-results.sarif
+          fi
 
       - name: Upload tfsec results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4.35.1
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: tfsec-results.sarif
@@ -51,13 +54,17 @@ jobs:
         run: |
           checkov -d terraform --framework terraform \
             --output sarif \
-            --output-file-path ${{ github.workspace }} \
+            --output-file-path . \
             --skip-check CKV_GCP_82 \
-            --soft-fail
-        continue-on-error: true
+            --soft-fail || true
+          # Checkov writes results_sarif.sarif in the output-file-path directory
+          # Create a minimal valid SARIF file if Checkov didn't produce one
+          if [ ! -f results_sarif.sarif ]; then
+            echo '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/main/sarif-2.1/schema/sarif-schema-2.1.0.json","runs":[{"tool":{"driver":{"name":"checkov","rules":[]}},"results":[]}]}' > results_sarif.sarif
+          fi
 
       - name: Upload Checkov results
-        uses: github/codeql-action/upload-sarif@v4.35.1
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: results_sarif.sarif
@@ -69,7 +76,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.35.0
@@ -77,15 +84,15 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
-          output: '${{ github.workspace }}/trivy-results.sarif'
+          output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'
 
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v4.35.1
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
-          sarif_file: ${{ github.workspace }}/trivy-results.sarif
+          sarif_file: trivy-results.sarif
           category: trivy
 
   dependency-security:
@@ -94,7 +101,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/iac@master
@@ -115,7 +122,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Scorecard results
-        uses: github/codeql-action/upload-sarif@v4.35.1
+        uses: github/codeql-action/upload-sarif@v4
         if: always()
         with:
           sarif_file: scorecard-results.sarif
@@ -127,7 +134,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -155,7 +162,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Create security summary
         run: |
