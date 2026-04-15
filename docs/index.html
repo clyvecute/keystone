@@ -920,6 +920,71 @@
       `;
     }
 
+    // ── Map workflow job names → scan row IDs ──
+    const SCAN_JOBS = [
+      { jobName: 'Terraform IaC Security',    elemId: 'scan-tf',  runLink: '' },
+      { jobName: 'Container Security Scan',   elemId: 'scan-ct',  runLink: '' },
+      { jobName: 'Dependency Security Scan',  elemId: 'scan-dp',  runLink: '' },
+      { jobName: 'Secrets Detection',         elemId: 'scan-sc',  runLink: '' },
+    ];
+
+    function setScanBadge(elemId, conclusion, status, runUrl) {
+      const el = document.getElementById(elemId);
+      if (!el) return;
+      const sc = statusClass(conclusion, status);
+      const sl = statusLabel(conclusion, status);
+      el.className = `status-badge status-${sc}`;
+      el.innerHTML = `<span class="dot"></span>${sl}`;
+      // Make the entire scan row clickable
+      const row = el.closest('.scan-row');
+      if (row && runUrl) {
+        row.style.cursor = 'pointer';
+        row.onclick = () => window.open(runUrl, '_blank');
+      }
+    }
+
+    async function fetchSecurityJobs() {
+      try {
+        // Step 1: Get the latest security-scan.yml run
+        const r1 = await fetch(`${API}/actions/workflows/security-scan.yml/runs?per_page=1&branch=main`);
+        if (!r1.ok) return;
+        const d1 = await r1.json();
+        const run = d1.workflow_runs?.[0];
+        if (!run) return;
+
+        // Update scan header with timestamp and link
+        const header = document.querySelector('.scan-title');
+        if (header) {
+          header.innerHTML = `security-scan.yml · <span style="color:var(--muted)">run #${run.run_number} · ${timeAgo(run.updated_at)}</span>`;
+        }
+
+        // Step 2: Fetch jobs for that run
+        const r2 = await fetch(`${API}/actions/runs/${run.id}/jobs`);
+        if (!r2.ok) return;
+        const d2 = await r2.json();
+        const jobs = d2.jobs || [];
+
+        // Step 3: Match each job to its scan row
+        SCAN_JOBS.forEach(({ jobName, elemId }) => {
+          const job = jobs.find(j => j.name.toLowerCase().includes(jobName.toLowerCase().split(' ')[0]));
+          if (job) {
+            setScanBadge(elemId, job.conclusion, job.status, run.html_url);
+          }
+        });
+
+        // Fallback: use overall run conclusion for any unmatched rows
+        SCAN_JOBS.forEach(({ jobName, elemId }) => {
+          const el = document.getElementById(elemId);
+          if (el && el.textContent.includes('passing') && run.conclusion && run.conclusion !== 'success') {
+            setScanBadge(elemId, run.conclusion, run.status, run.html_url);
+          }
+        });
+
+      } catch (e) {
+        console.warn('Could not fetch security scan jobs:', e);
+      }
+    }
+
     async function init() {
       // Render loading skeletons
       const grid = document.getElementById('pipeline-grid');
@@ -933,9 +998,12 @@
         if (el && d.total_count) el.textContent = d.total_count + '+';
       } catch {}
 
-      // Fetch each workflow in parallel
+      // Fetch each pipeline card in parallel
       const results = await Promise.all(WORKFLOWS.map(fetchWorkflow));
       grid.innerHTML = results.map(renderCard).join('');
+
+      // Fetch live security scan job results
+      await fetchSecurityJobs();
     }
 
     init();
