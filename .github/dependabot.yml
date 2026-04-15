@@ -1,25 +1,11 @@
 version: 2
 updates:
+  # Keep GitHub Actions versions up to date
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"  # weekly was too noisy
     groups:
       github-actions:
         patterns:
           - "*"
-
-  - package-ecosystem: "terraform"
-    directory: "/terraform/environments/dev"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "terraform"
-    directory: "/terraform/environments/prod"
-    schedule:
-      interval: "weekly"
-
-  - package-ecosystem: "gomod"
-    directory: "/tools/preflight"
-    schedule:
-      interval: "weekly"
