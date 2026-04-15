@@ -51,16 +51,15 @@ jobs:
         run: |
           checkov -d terraform --framework terraform \
             --output sarif \
-            --output-file-path . \
             --skip-check CKV_GCP_82 \
-            --soft-fail
+            --soft-fail > checkov-results.sarif
         continue-on-error: true
 
       - name: Upload Checkov results
         uses: github/codeql-action/upload-sarif@v4.35.1
         if: always()
         with:
-          sarif_file: results/results_sarif.sarif
+          sarif_file: checkov-results.sarif
           category: checkov
 
   container-security:
