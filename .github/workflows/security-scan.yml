@@ -24,37 +24,38 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run tfsec
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working_directory: terraform
-          additional_args: --format sarif --out ../tfsec-results.sarif
+          format: sarif
+          sarif_file: ${{ github.workspace }}/tfsec-results.sarif
           soft_fail: true
 
       - name: Upload tfsec results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v4.35.1
         if: always()
         with:
-          sarif_file: tfsec-results.sarif
+          sarif_file: ${{ github.workspace }}/tfsec-results.sarif
           category: tfsec
 
       - name: Run Checkov
-        uses: bridgecrewio/checkov-action@v12.2262.0
+        uses: bridgecrewio/checkov-action@v12.2806.0
         with:
           directory: terraform
           framework: terraform
           output_format: sarif
-          output_file_path: ./checkov-results.sarif
+          output_file_path: console,sarif  # writes SARIF to ./results/results_sarif.sarif
           soft_fail: true
           skip_check: CKV_GCP_82
 
       - name: Upload Checkov results
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v4.35.1
         if: always()
         with:
-          sarif_file: ./checkov-results.sarif
+          sarif_file: results/results_sarif.sarif
           category: checkov
 
   container-security:
@@ -63,23 +64,23 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
-          output: 'trivy-results.sarif'
+          output: '${{ github.workspace }}/trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '0'
 
       - name: Upload Trivy results
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v4.35.1
         if: always()
         with:
-          sarif_file: trivy-results.sarif
+          sarif_file: ${{ github.workspace }}/trivy-results.sarif
           category: trivy
 
   dependency-security:
@@ -88,7 +89,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/iac@master
@@ -109,7 +110,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Scorecard results
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v4.35.1
         if: always()
         with:
           sarif_file: scorecard-results.sarif
@@ -121,7 +122,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -149,7 +150,7 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Create security summary
         run: |
