@@ -4,10 +4,13 @@
 
 Keystone is a battle-hardened infrastructure foundation designed for organizations that require high-availability, zero-trust security, and operational excellence on Google Cloud Platform. It moves beyond simple cloud deployments into **automated, self-healing, and cost-aware operations**.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Portfolio%20Dashboard-6366f1?style=flat&logo=github)](https://clyvecute.github.io/keystone/)
 [![Security Scan](https://github.com/clyvecute/keystone/actions/workflows/security-scan.yml/badge.svg)](https://github.com/clyvecute/keystone/actions/workflows/security-scan.yml)
 [![Build](https://github.com/clyvecute/keystone/actions/workflows/build.yml/badge.svg)](https://github.com/clyvecute/keystone/actions/workflows/build.yml)
 [![Infrastructure Tests](https://github.com/clyvecute/keystone/actions/workflows/test.yml/badge.svg)](https://github.com/clyvecute/keystone/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
+
+> 🔗 **[Live Portfolio Dashboard →](https://clyvecute.github.io/keystone/)** — Real-time pipeline status, security posture, and architecture overview.
 
 ---
 

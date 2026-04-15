@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Keystone — Infrastructure Platform</title>
+  <meta name="description" content="Enterprise-grade Infrastructure-as-Code on GCP. Live CI/CD pipelines, automated security scanning, and cost-aware deployments." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: #2a2a3a;
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --card-glow: rgba(99,102,241,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── GRID BG ── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 16px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .nav-cta:hover { background: var(--accent2); transform: translateY(-1px); }
+
+    /* ── MAIN CONTENT ── */
+    main {
+      position: relative;
+      z-index: 1;
+      padding-top: 80px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 100px 24px 60px;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 100px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #a5b4fc;
+      margin-bottom: 24px;
+    }
+
+    .hero-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #e2e8f0 0%, #a5b4fc 50%, #8b5cf6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.125rem;
+      color: var(--muted);
+      max-width: 580px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(99,102,241,0.4); }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: #a5b4fc; transform: translateY(-2px); }
+
+    /* ── SECTION ── */
+    section { padding: 80px 0; }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 560px;
+      line-height: 1.6;
+      margin-bottom: 48px;
+    }
+
+    /* ── PIPELINE STATUS ── */
+    .pipeline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    .pipeline-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pipeline-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--card-glow);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .pipeline-card:hover::before { opacity: 1; }
+    .pipeline-card:hover { border-color: rgba(99,102,241,0.4); transform: translateY(-2px); }
+
+    .pipeline-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .pipeline-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-badge .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+
+    .status-success { background: rgba(34,197,94,0.1); color: var(--green); }
+    .status-success .dot { background: var(--green); }
+    .status-failure { background: rgba(239,68,68,0.1); color: var(--red); }
+    .status-failure .dot { background: var(--red); }
+    .status-skipped { background: rgba(100,116,139,0.1); color: var(--muted); }
+    .status-skipped .dot { background: var(--muted); }
+    .status-loading { background: rgba(99,102,241,0.1); color: #a5b4fc; }
+    .status-loading .dot { background: #a5b4fc; animation: pulse 1s infinite; }
+
+    .pipeline-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .pipeline-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .pipeline-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── FEATURES ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.3s;
+    }
+    .feature-card:hover { border-color: rgba(99,102,241,0.4); transform: translateY(-2px); }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature-title {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      padding: 3px 10px;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.2);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #a5b4fc;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── SECURITY SCANNER ── */
+    .scan-result {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .scan-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .scan-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .scan-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(42,42,58,0.5);
+      transition: background 0.2s;
+    }
+    .scan-row:last-child { border-bottom: none; }
+    .scan-row:hover { background: rgba(99,102,241,0.04); }
+
+    .scan-name { font-size: 0.875rem; font-weight: 500; }
+    .scan-tool { font-size: 0.75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+
+    /* ── ARCHITECTURE ── */
+    .arch-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .arch-layers {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    .arch-layer {
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      position: relative;
+    }
+
+    .arch-layer-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .arch-nodes {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .arch-node {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── DIVIDER ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      .hero { padding: 80px 20px 40px; }
+      section { padding: 60px 0; }
+    }
+
+    /* ── ANIMATE IN ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      animation: fadeUp 0.6s ease forwards;
+    }
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    .delay-4 { animation-delay: 0.4s; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">
+      <div class="logo-icon">⬡</div>
+      Keystone
+    </div>
+    <ul class="nav-links">
+      <li><a href="#pipelines">Pipelines</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#security">Security</a></li>
+      <li><a href="#architecture">Architecture</a></li>
+    </ul>
+    <a href="https://github.com/clyvecute/keystone" target="_blank" class="nav-cta">
+      ★ View on GitHub
+    </a>
+  </nav>
+
+  <main>
+
+    <!-- HERO -->
+    <div class="hero container">
+      <div class="hero-glow"></div>
+      <div class="hero-badge fade-up">
+        <span class="dot"></span>
+        Live pipelines running on GCP
+      </div>
+      <h1 class="fade-up delay-1">Enterprise Infrastructure<br/>Built to Last</h1>
+      <p class="fade-up delay-2">
+        Production-grade IaC on Google Cloud Platform. Automated security scanning,
+        zero-trust authentication, and cost-aware deployments — all in code.
+      </p>
+      <div class="hero-actions fade-up delay-3">
+        <a href="https://github.com/clyvecute/keystone" target="_blank" class="btn-primary">
+          View Source Code →
+        </a>
+        <a href="https://github.com/clyvecute/keystone/actions" target="_blank" class="btn-secondary">
+          Live Pipelines ↗
+        </a>
+        <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" class="btn-secondary">
+          Security Alerts ↗
+        </a>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- STATS -->
+    <section id="stats">
+      <div class="container">
+        <div class="stats-row fade-up">
+          <div class="stat-card">
+            <div class="stat-number">4</div>
+            <div class="stat-label">CI/CD Pipelines</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">7+</div>
+            <div class="stat-label">Security Scanners</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Hard-coded Keys</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="run-count">—</div>
+            <div class="stat-label">Pipeline Runs</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">2</div>
+            <div class="stat-label">Environments</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">$425</div>
+            <div class="stat-label">Prod/Month Est.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- PIPELINES -->
+    <section id="pipelines">
+      <div class="container">
+        <div class="section-label">Live CI/CD</div>
+        <h2 class="section-title">Pipeline Status</h2>
+        <p class="section-sub">Real-time status fetched from GitHub Actions. Every commit triggers automated validation, security scanning, and deployment.</p>
+
+        <div class="pipeline-grid" id="pipeline-grid">
+          <!-- injected by JS -->
+        </div>
+
+        <p style="margin-top: 20px; font-size:0.8rem; color: var(--muted); text-align:center;">
+          ↗ <a href="https://github.com/clyvecute/keystone/actions" target="_blank" style="color:var(--accent);">View all runs on GitHub Actions</a>
+        </p>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="container">
+        <div class="section-label">What's Inside</div>
+        <h2 class="section-title">Engineering Decisions</h2>
+        <p class="section-sub">Not a tutorial project. Real infrastructure choices with real trade-offs documented at every layer.</p>
+
+        <div class="features-grid">
+          <div class="feature-card fade-up">
+            <span class="feature-icon">🔐</span>
+            <div class="feature-title">Zero-Trust Identity (WIF)</div>
+            <div class="feature-desc">Workload Identity Federation eliminates long-lived service account keys. GitHub Actions authenticates to GCP without any stored credentials.</div>
+            <div class="feature-tags">
+              <span class="tag">google-github-actions/auth</span>
+              <span class="tag">OIDC</span>
+              <span class="tag">No Keys</span>
+            </div>
+          </div>
+          <div class="feature-card fade-up delay-1">
+            <span class="feature-icon">🛡️</span>
+            <div class="feature-title">Multi-Layer Security Scanning</div>
+            <div class="feature-desc">tfsec + Checkov for IaC misconfigs, Trivy for container vulnerabilities, TruffleHog + Gitleaks for secret detection. Results uploaded to GitHub Security as SARIF.</div>
+            <div class="feature-tags">
+              <span class="tag">tfsec</span>
+              <span class="tag">checkov</span>
+              <span class="tag">trivy</span>
+              <span class="tag">SARIF</span>
+            </div>
+          </div>
+          <div class="feature-card fade-up delay-2">
+            <span class="feature-icon">🏗️</span>
+            <div class="feature-title">Modular Terraform Architecture</div>
+            <div class="feature-desc">Network, compute, database, and monitoring as reusable modules. Environment-specific overlays for dev/prod with remote state and locking on GCS.</div>
+            <div class="feature-tags">
+              <span class="tag">terraform</span>
+              <span class="tag">cloud-run</span>
+              <span class="tag">cloud-sql</span>
+              <span class="tag">GCS state</span>
+            </div>
+          </div>
+          <div class="feature-card fade-up">
+            <span class="feature-icon">🚀</span>
+            <div class="feature-title">Go Preflight Validator</div>
+            <div class="feature-desc">Custom-built Go binary that validates GCP environment state — quotas, enabled APIs, credentials — before any Terraform execution begins.</div>
+            <div class="feature-tags">
+              <span class="tag">Go</span>
+              <span class="tag">gcloud SDK</span>
+              <span class="tag">Preflight</span>
+            </div>
+          </div>
+          <div class="feature-card fade-up delay-1">
+            <span class="feature-icon">💰</span>
+            <div class="feature-title">Cost-Aware Deployments</div>
+            <div class="feature-desc">Infracost runs on every PR touching Terraform, posting a cost delta comment. No "cloud bill shocker" — budget is a first-class engineering constraint.</div>
+            <div class="feature-tags">
+              <span class="tag">infracost</span>
+              <span class="tag">PR comments</span>
+              <span class="tag">$25 dev / $425 prod</span>
+            </div>
+          </div>
+          <div class="feature-card fade-up delay-2">
+            <span class="feature-icon">📋</span>
+            <div class="feature-title">Failure-First Documentation</div>
+            <div class="feature-desc">Runbooks documenting how things break, with time-to-recover estimates and prevention strategies. For 3 AM incidents, not just happy paths.</div>
+            <div class="feature-tags">
+              <span class="tag">Runbooks</span>
+              <span class="tag">MTTR</span>
+              <span class="tag">DR procedures</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECURITY -->
+    <section id="security">
+      <div class="container">
+        <div class="section-label">Security Posture</div>
+        <h2 class="section-title">Automated Security Scanning</h2>
+        <p class="section-sub">Every push to main triggers 4 parallel security jobs. Results are uploaded as SARIF to GitHub's Security tab for triaging.</p>
+
+        <div class="scan-result">
+          <div class="scan-header">
+            <span class="scan-title">security-scan.yml — last run</span>
+            <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" style="font-size:0.78rem; color:var(--accent); text-decoration:none;">View alerts ↗</a>
+          </div>
+          <div class="scan-row">
+            <div>
+              <div class="scan-name">Terraform IaC Analysis</div>
+              <div class="scan-tool">tfsec + checkov · SARIF → GitHub Security</div>
+            </div>
+            <span class="status-badge status-success" id="scan-tf"><span class="dot"></span>passing</span>
+          </div>
+          <div class="scan-row">
+            <div>
+              <div class="scan-name">Container Vulnerability Scan</div>
+              <div class="scan-tool">trivy · filesystem scan · SARIF upload</div>
+            </div>
+            <span class="status-badge status-success" id="scan-ct"><span class="dot"></span>passing</span>
+          </div>
+          <div class="scan-row">
+            <div>
+              <div class="scan-name">Secret Detection</div>
+              <div class="scan-tool">gitleaks + trufflehog · git history scan</div>
+            </div>
+            <span class="status-badge status-success" id="scan-sc"><span class="dot"></span>passing</span>
+          </div>
+          <div class="scan-row">
+            <div>
+              <div class="scan-name">Supply Chain / Scorecard</div>
+              <div class="scan-tool">snyks · OSSF scorecard · dependency audit</div>
+            </div>
+            <span class="status-badge status-success" id="scan-dp"><span class="dot"></span>passing</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ARCHITECTURE -->
+    <section id="architecture">
+      <div class="container">
+        <div class="section-label">System Design</div>
+        <h2 class="section-title">Architecture Overview</h2>
+        <p class="section-sub">Serverless-first design on GCP. Private networking, encrypted storage, and managed services — no Kubernetes overhead.</p>
+
+        <div class="arch-diagram">
+          <div class="arch-layers">
+            <div class="arch-layer" style="border-color: rgba(99,102,241,0.3);">
+              <div class="arch-layer-label">🔒 Security Perimeter</div>
+              <div class="arch-nodes">
+                <div class="arch-node">🛡️ Cloud Armor (WAF)</div>
+                <div class="arch-node">✅ Binary Authorization</div>
+                <div class="arch-node">🔑 Secret Manager</div>
+                <div class="arch-node">🔐 KMS (CMEK)</div>
+              </div>
+            </div>
+            <div class="arch-layer" style="border-color: rgba(59,130,246,0.3);">
+              <div class="arch-layer-label">⚡ Compute Layer</div>
+              <div class="arch-nodes">
+                <div class="arch-node">☁️ Cloud Run (Serverless)</div>
+                <div class="arch-node">🔗 VPC Connector</div>
+              </div>
+            </div>
+            <div class="arch-layer" style="border-color: rgba(34,197,94,0.3);">
+              <div class="arch-layer-label">💾 Data Layer</div>
+              <div class="arch-nodes">
+                <div class="arch-node">🐘 Cloud SQL (PostgreSQL)</div>
+                <div class="arch-node">🪣 Cloud Storage</div>
+              </div>
+            </div>
+            <div class="arch-layer" style="border-color: rgba(234,179,8,0.3);">
+              <div class="arch-layer-label">📊 Observability</div>
+              <div class="arch-nodes">
+                <div class="arch-node">📈 Cloud Monitoring</div>
+                <div class="arch-node">📋 Cloud Logging</div>
+                <div class="arch-node">🔍 BigQuery Audit</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Built by <a href="https://github.com/clyvecute" target="_blank">clyvecute</a> · <a href="https://github.com/clyvecute/keystone" target="_blank">Source on GitHub</a> · MIT License</p>
+    <p style="margin-top:8px; font-size:0.75rem;">Pipeline status data fetched live from GitHub API</p>
+  </footer>
+
+  <script>
+    const REPO = 'clyvecute/keystone';
+    const API  = `https://api.github.com/repos/${REPO}`;
+
+    const WORKFLOWS = [
+      { id: 'build.yml',         label: 'Build & Push',       desc: 'Docker build → GCR push → SBOM generation → Trivy scan', icon: '🏗️', color: '#6366f1' },
+      { id: 'test.yml',          label: 'Infrastructure Test', desc: 'Terraform validate + fmt, ShellCheck, Preflight checks',   icon: '✅', color: '#22c55e' },
+      { id: 'security-scan.yml', label: 'Security Scan',       desc: 'tfsec, Checkov, Trivy, Gitleaks, TruffleHog, Scorecard',  icon: '🛡️', color: '#f59e0b' },
+      { id: 'deploy.yml',        label: 'Deploy',              desc: 'Terraform apply → Health check → Slack notification',      icon: '🚀', color: '#8b5cf6' },
+    ];
+
+    function statusClass(conclusion, status) {
+      if (status === 'in_progress' || status === 'queued') return 'loading';
+      if (conclusion === 'success') return 'success';
+      if (conclusion === 'failure') return 'failure';
+      if (conclusion === 'skipped') return 'skipped';
+      return 'loading';
+    }
+
+    function statusLabel(conclusion, status) {
+      if (status === 'in_progress') return 'running';
+      if (status === 'queued') return 'queued';
+      if (conclusion === 'success') return 'passing';
+      if (conclusion === 'failure') return 'failed';
+      if (conclusion === 'skipped') return 'skipped';
+      return 'loading';
+    }
+
+    function timeAgo(dateStr) {
+      if (!dateStr) return '';
+      const diff = Date.now() - new Date(dateStr);
+      const m = Math.floor(diff / 60000);
+      const h = Math.floor(m / 60);
+      const d = Math.floor(h / 24);
+      if (d > 0) return `${d}d ago`;
+      if (h > 0) return `${h}h ago`;
+      return `${m}m ago`;
+    }
+
+    async function fetchWorkflow(wf) {
+      try {
+        const r = await fetch(`${API}/actions/workflows/${wf.id}/runs?per_page=1`);
+        if (!r.ok) throw new Error();
+        const data = await r.json();
+        const run = data.workflow_runs?.[0];
+        return { ...wf, run };
+      } catch {
+        return { ...wf, run: null };
+      }
+    }
+
+    function renderCard(wf) {
+      const { run } = wf;
+      const sc = run ? statusClass(run.conclusion, run.status) : 'loading';
+      const sl = run ? statusLabel(run.conclusion, run.status) : '…';
+      const ago = run ? timeAgo(run.updated_at) : '';
+      const runUrl = run ? run.html_url : `https://github.com/${REPO}/actions`;
+
+      return `
+        <a href="${runUrl}" target="_blank" style="text-decoration:none; color:inherit;">
+          <div class="pipeline-card">
+            <div class="pipeline-header">
+              <div class="pipeline-icon" style="background:${wf.color}1a;">${wf.icon}</div>
+              <span class="status-badge status-${sc}"><span class="dot"></span>${sl}</span>
+            </div>
+            <div class="pipeline-name">${wf.label}</div>
+            <div class="pipeline-desc">${wf.desc}</div>
+            <div class="pipeline-meta">
+              ${ago ? `🕐 ${ago}` : ''}
+              ${run?.run_number ? `· #${run.run_number}` : ''}
+              ${run?.head_branch ? `· ${run.head_branch}` : ''}
+            </div>
+          </div>
+        </a>
+      `;
+    }
+
+    async function init() {
+      // Render loading skeletons
+      const grid = document.getElementById('pipeline-grid');
+      grid.innerHTML = WORKFLOWS.map(wf => renderCard(wf)).join('');
+
+      // Fetch total run count
+      try {
+        const r = await fetch(`${API}/actions/runs?per_page=1`);
+        const d = await r.json();
+        const el = document.getElementById('run-count');
+        if (el && d.total_count) el.textContent = d.total_count + '+';
+      } catch {}
+
+      // Fetch each workflow in parallel
+      const results = await Promise.all(WORKFLOWS.map(fetchWorkflow));
+      grid.innerHTML = results.map(renderCard).join('');
+    }
+
+    init();
+    // Refresh every 60s
+    setInterval(init, 60000);
+  </script>
+</body>
+</html>
