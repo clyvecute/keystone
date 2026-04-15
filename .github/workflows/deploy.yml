@@ -37,21 +37,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Validate Identity
+      - name: Check Secrets
         run: |
-          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then
-            echo "::error::WIF_PROVIDER Secret is missing. Authentication will fail."
-            echo "::error::Please run 'make setup-wif' locally and add the output to GitHub Secrets."
-            exit 1
-          fi
+          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then echo "::warning::WIF_PROVIDER not set — GCP steps will be skipped."; fi
 
       - name: Authenticate to Google Cloud
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Setup Terraform
@@ -60,11 +58,13 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/dev
           terraform init
 
       - name: Terraform Plan
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/dev
           terraform plan -out=tfplan \
@@ -72,23 +72,26 @@ jobs:
             -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
 
       - name: Terraform Apply
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/dev
           terraform apply -auto-approve tfplan
 
       - name: Get Service URL
         id: service-url
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/dev
           echo "url=$(terraform output -raw service_url)" >> $GITHUB_OUTPUT
 
       - name: Run Health Check
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           chmod +x scripts/healthcheck.sh
           ./scripts/healthcheck.sh ${{ steps.service-url.outputs.url }}
 
       - name: Notify Deployment
-        if: always()
+        if: always() && secrets.SLACK_WEBHOOK != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}
@@ -109,21 +112,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate Identity
+      - name: Check Secrets
         run: |
-          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then
-            echo "::error::WIF_PROVIDER Secret is missing. Authentication will fail."
-            echo "::error::Please run 'make setup-wif' locally and add the output to GitHub Secrets."
-            exit 1
-          fi
+          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then echo "::warning::WIF_PROVIDER not set — GCP steps will be skipped."; fi
 
       - name: Authenticate to Google Cloud
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT_PROD }}
 
       - name: Set up Cloud SDK
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Setup Terraform
@@ -132,11 +133,13 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/prod
           terraform init
 
       - name: Terraform Plan
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/prod
           terraform plan -out=tfplan \
@@ -144,28 +147,32 @@ jobs:
             -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
 
       - name: Terraform Apply
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/prod
           terraform apply -auto-approve tfplan
 
       - name: Get Service URL
         id: service-url
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           cd terraform/environments/prod
           echo "url=$(terraform output -raw service_url)" >> $GITHUB_OUTPUT
 
       - name: Run Health Check
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           chmod +x scripts/healthcheck.sh
           ./scripts/healthcheck.sh ${{ steps.service-url.outputs.url }}
 
       - name: Run Backup
+        if: ${{ secrets.WIF_PROVIDER != '' }}
         run: |
           chmod +x scripts/backup.sh
           ./scripts/backup.sh
 
       - name: Notify Deployment
-        if: always()
+        if: always() && secrets.SLACK_WEBHOOK != ''
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ job.status }}

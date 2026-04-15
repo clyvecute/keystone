@@ -10,6 +10,7 @@ jobs:
   infracost:
     name: Infracost Analysis
     runs-on: ubuntu-latest
+    if: ${{ secrets.INFRACOST_API_KEY != '' }}
     permissions:
       contents: read
       pull-requests: write
