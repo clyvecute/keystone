@@ -159,15 +159,53 @@ jobs:
 
       - name: Create security summary
         run: |
-          echo "# Security Scan Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Terraform Security: ${{ needs.terraform-security.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Container Security: ${{ needs.container-security.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Dependency Security: ${{ needs.dependency-security.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Secrets Detection: ${{ needs.secrets-scan.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "View detailed results in the Security tab." >> $GITHUB_STEP_SUMMARY
+          # Status emoji helper
+          status_icon() {
+            case "$1" in
+              success)  echo "✅" ;;
+              failure)  echo "❌" ;;
+              skipped)  echo "⏭️" ;;
+              *)        echo "⚠️" ;;
+            esac
+          }
+
+          TF=$(status_icon "${{ needs.terraform-security.result }}")
+          CT=$(status_icon "${{ needs.container-security.result }}")
+          DP=$(status_icon "${{ needs.dependency-security.result }}")
+          SC=$(status_icon "${{ needs.secrets-scan.result }}")
+
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          # 🔒 Security Scan Report
+
+          **Repository:** \`${{ github.repository }}\`
+          **Branch:** \`${{ github.ref_name }}\`
+          **Triggered by:** \`${{ github.event_name }}\`
+          **Commit:** \`${{ github.sha }}\`
+          **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ---
+
+          ## Scan Results
+
+          | Scan | Tool | Status | Details |
+          |------|------|--------|---------|
+          | Terraform IaC | tfsec + Checkov | $TF ${{ needs.terraform-security.result }} | Checks HCL for misconfigs & CVEs |
+          | Container Image | Trivy | $CT ${{ needs.container-security.result }} | Scans filesystem for vulnerabilities |
+          | Dependencies | Snyk + Scorecard | $DP ${{ needs.dependency-security.result }} | Audits packages & supply chain |
+          | Secrets Detection | Gitleaks + TruffleHog | $SC ${{ needs.secrets-scan.result }} | Scans git history for leaked secrets |
+
+          ---
+
+          ## 📊 Where to Find Detailed Results
+
+          - **Code Scanning Alerts** → [Security tab](${{ github.server_url }}/${{ github.repository }}/security/code-scanning)
+          - **tfsec findings** → uploaded as SARIF to GitHub Security
+          - **Checkov findings** → uploaded as SARIF to GitHub Security
+          - **Trivy findings** → uploaded as SARIF to GitHub Security
+
+          ---
+          > _Scans run on every push to \`main\`/\`develop\` and daily at 02:00 UTC_
+          EOF
 
       - name: Comment on PR
         if: github.event_name == 'pull_request'
