@@ -143,9 +143,9 @@ jobs:
         continue-on-error: true
         with:
           path: ./
-          base: main
-          head: HEAD
-          extra_args: --debug --only-verified
+          base: ${{ github.event.before }}
+          head: ${{ github.sha }}
+          extra_args: --only-verified
 
   security-report:
     name: Generate Security Report

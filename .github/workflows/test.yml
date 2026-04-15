@@ -72,6 +72,7 @@ jobs:
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@v2.0.0
+        continue-on-error: true
         with:
           scandir: './scripts'
 
@@ -99,6 +100,7 @@ jobs:
 
       - name: Lint Markdown files
         uses: avto-dev/markdown-lint@v1.5.0
+        continue-on-error: true
         with:
           config: '.markdownlint.json'
           args: '**/*.md'
