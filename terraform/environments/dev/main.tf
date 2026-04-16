@@ -69,11 +69,11 @@ module "database" {
 module "monitoring" {
   source = "../../modules/monitoring"
 
-  project_id      = var.project_id
-  region          = var.region
-  environment     = "dev"
-  app_name        = var.app_name
-  service_name    = module.compute.service_name
-  service_url     = module.compute.service_url
-  kms_key_name    = module.security.storage_kms_key_id
+  project_id   = var.project_id
+  region       = var.region
+  environment  = "dev"
+  app_name     = var.app_name
+  service_name = module.compute.service_name
+  service_url  = module.compute.service_url
+  kms_key_name = module.security.storage_kms_key_id
 }

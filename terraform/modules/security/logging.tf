@@ -2,11 +2,11 @@
 # Ships critical audit logs to BigQuery for long-term analysis and compliance
 
 resource "google_bigquery_dataset" "audit_logs" {
-  dataset_id                  = "keystone_${var.environment}_audit_logs"
-  friendly_name               = "Audit Logs Dataset"
-  description                 = "Dataset for storing infrastructure audit logs"
-  location                    = var.region
-  project                     = var.project_id
+  dataset_id    = "keystone_${var.environment}_audit_logs"
+  friendly_name = "Audit Logs Dataset"
+  description   = "Dataset for storing infrastructure audit logs"
+  location      = var.region
+  project       = var.project_id
 
   delete_contents_on_destroy = var.environment != "prod"
 

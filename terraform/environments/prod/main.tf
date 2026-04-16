@@ -61,7 +61,7 @@ module "database" {
   environment         = "prod"
   app_name            = var.app_name
   tier                = "db-custom-2-7680" # 2 vCPU, 7.5GB RAM
-  availability_type   = "REGIONAL" # High availability
+  availability_type   = "REGIONAL"         # High availability
   disk_size           = 100
   deletion_protection = true # Prevent accidental deletion
   vpc_id              = module.network.vpc_id
