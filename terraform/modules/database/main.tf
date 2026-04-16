@@ -2,21 +2,17 @@
 # Creates Cloud SQL PostgreSQL instance
 
 resource "google_sql_database_instance" "main" {
-  name             = "${var.app_name}-${var.environment}-db"
-  database_version = var.database_version
-  region           = var.region
-  project          = var.project_id
+  name                = "${var.app_name}-${var.environment}-db"
+  database_version    = var.database_version
+  region              = var.region
+  project             = var.project_id
+  encryption_key_name = var.kms_key_name
 
   settings {
     tier              = var.tier
     availability_type = var.availability_type
     disk_size         = var.disk_size
     disk_type         = var.disk_type
-
-    # Explicit encryption configuration for compliance
-    disk_encryption_configuration {
-      kms_key_name = var.kms_key_name
-    }
 
     backup_configuration {
       enabled                        = true

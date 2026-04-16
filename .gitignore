@@ -4,3 +4,11 @@ bin/
 # Go build artifacts
 tools/preflight/preflight
 tools/preflight/preflight.exe
+
+# Terraform cache and state files
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+override.tf
