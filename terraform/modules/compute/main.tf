@@ -117,7 +117,7 @@ resource "google_binary_authorization_policy" "policy" {
   default_admission_rule {
     evaluation_mode  = var.environment == "prod" ? "REQUIRE_ATTESTATION" : "ALWAYS_ALLOW"
     enforcement_mode = "ENFORCED_BLOCK_AND_AUDIT_LOG"
-    
+
     require_attestations_by = (var.environment == "prod" && var.attestation_authority_note != "") ? [var.attestation_authority_note] : []
   }
 

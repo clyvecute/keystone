@@ -31,17 +31,17 @@ module "network" {
 module "compute" {
   source = "../../modules/compute"
 
-  project_id        = var.project_id
-  region            = var.region
-  environment       = "dev"
-  app_name          = var.app_name
-  container_image   = var.container_image
-  min_instances     = "0"
-  max_instances     = "5"
-  cpu_limit         = "1000m"
-  memory_limit      = "512Mi"
+  project_id          = var.project_id
+  region              = var.region
+  environment         = "dev"
+  app_name            = var.app_name
+  container_image     = var.container_image
+  min_instances       = "0"
+  max_instances       = "5"
+  cpu_limit           = "1000m"
+  memory_limit        = "512Mi"
   allow_public_access = true
-  vpc_connector_id  = module.network.connector_id
+  vpc_connector_id    = module.network.connector_id
 
   enable_binary_authorization = false # Disable for faster dev cycles
 

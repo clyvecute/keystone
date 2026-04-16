@@ -7,7 +7,7 @@ resource "google_bigquery_dataset" "audit_logs" {
   description                 = "Dataset for storing infrastructure audit logs"
   location                    = var.region
   project                     = var.project_id
-  
+
   delete_contents_on_destroy = var.environment != "prod"
 
   labels = {

@@ -2,7 +2,7 @@
 # Terraform-managed Cloud Monitoring Dashboards
 
 resource "google_monitoring_dashboard" "service_overview" {
-  project = var.project_id
+  project        = var.project_id
   dashboard_json = <<EOF
 {
   "displayName": "${var.app_name}-${var.environment} Service Overview",

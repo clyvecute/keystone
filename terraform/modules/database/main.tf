@@ -43,7 +43,7 @@ resource "google_sql_database_instance" "main" {
 
     # Enable automated minor version upgrades
     activation_policy = "ALWAYS"
-    
+
     insights_config {
       query_insights_enabled  = true
       query_string_length     = 1024

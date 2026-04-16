@@ -32,17 +32,17 @@ module "network" {
 module "compute" {
   source = "../../modules/compute"
 
-  project_id        = var.project_id
-  region            = var.region
-  environment       = "prod"
-  app_name          = var.app_name
-  container_image   = var.container_image
-  min_instances     = "1" # Always keep 1 instance warm
-  max_instances     = "100"
-  cpu_limit         = "2000m"
-  memory_limit      = "1Gi"
+  project_id          = var.project_id
+  region              = var.region
+  environment         = "prod"
+  app_name            = var.app_name
+  container_image     = var.container_image
+  min_instances       = "1" # Always keep 1 instance warm
+  max_instances       = "100"
+  cpu_limit           = "2000m"
+  memory_limit        = "1Gi"
   allow_public_access = var.allow_public_access
-  vpc_connector_id  = module.network.connector_id
+  vpc_connector_id    = module.network.connector_id
 
   enable_binary_authorization = true
 
