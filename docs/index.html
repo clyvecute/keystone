@@ -733,7 +733,7 @@
     </div>
     <p style="margin-top: 14px; font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace;">
       ↗ <a href="https://github.com/clyvecute/keystone/actions" target="_blank" style="color: var(--accent); text-decoration: none;">View all runs on GitHub Actions</a>
-      · refreshes every 60s
+      · refreshes every 10m
     </p>
   </section>
 
@@ -942,6 +942,7 @@
       if (status === 'in_progress' || status === 'queued') return 'loading';
       if (conclusion === 'success') return 'success';
       if (conclusion === 'failure') return 'failure';
+      if (conclusion === 'rate_limited') return 'failure';
       if (conclusion === 'skipped' || conclusion === 'cancelled') return 'skipped';
       return 'loading';
     }
@@ -951,6 +952,7 @@
       if (status === 'queued') return 'queued';
       if (conclusion === 'success') return 'passing';
       if (conclusion === 'failure') return 'failed';
+      if (conclusion === 'rate_limited') return 'rate limit';
       if (conclusion === 'skipped') return 'skipped';
       if (conclusion === 'cancelled') return 'cancelled';
       return '…';
@@ -971,11 +973,13 @@
     async function fetchWorkflow(wf) {
       try {
         let r = await fetch(`${API}/actions/workflows/${wf.id}/runs?per_page=1&branch=main`);
+        if (r.status === 403) return { ...wf, run: { conclusion: 'rate_limited', status: 'completed', updated_at: new Date().toISOString() } };
         if (!r.ok) throw new Error();
         let data = await r.json();
         
         if (!data.workflow_runs || data.workflow_runs.length === 0) {
           r = await fetch(`${API}/actions/workflows/${wf.id}/runs?per_page=1`);
+          if (r.status === 403) return { ...wf, run: { conclusion: 'rate_limited', status: 'completed', updated_at: new Date().toISOString() } };
           if (!r.ok) throw new Error();
           data = await r.json();
         }
@@ -1031,10 +1035,22 @@
     async function fetchSecurityJobs() {
       try {
         let r1 = await fetch(`${API}/actions/workflows/security-scan.yml/runs?per_page=1&branch=main`);
+        if (r1.status === 403) {
+          const header = document.getElementById('scan-header-title');
+          if (header) header.textContent = `security-scan.yml · API Rate Limit Exceeded`;
+          SCAN_JOBS.forEach(({ elemId }) => setScanBadge(elemId, 'rate_limited', 'completed', null));
+          return;
+        }
         if (!r1.ok) return;
         let d1 = await r1.json();
         if (!d1.workflow_runs || d1.workflow_runs.length === 0) {
           r1 = await fetch(`${API}/actions/workflows/security-scan.yml/runs?per_page=1`);
+          if (r1.status === 403) {
+            const header = document.getElementById('scan-header-title');
+            if (header) header.textContent = `security-scan.yml · API Rate Limit Exceeded`;
+            SCAN_JOBS.forEach(({ elemId }) => setScanBadge(elemId, 'rate_limited', 'completed', null));
+            return;
+          }
           if (!r1.ok) return;
           d1 = await r1.json();
         }
@@ -1075,7 +1091,7 @@
     }
 
     init();
-    setInterval(init, 60000);
+    setInterval(init, 600000);
   </script>
 </body>
 </html>
