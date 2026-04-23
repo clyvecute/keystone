@@ -66,13 +66,14 @@ backup_database() {
     local instance_name="configra-${ENVIRONMENT}-db"
     local backup_id="backup-${TIMESTAMP}"
     
+    local exit_code=0
     gcloud sql backups create \
         --instance="$instance_name" \
         --project="$PROJECT_ID" \
         --description="Automated backup ${TIMESTAMP}" \
-        2>&1 | tee "$BACKUP_DIR/$TIMESTAMP/database_backup.log"
+        2>&1 | tee "$BACKUP_DIR/$TIMESTAMP/database_backup.log" || exit_code=$?
     
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
+    if [ "$exit_code" -eq 0 ]; then
         log_success "Database backup created: $backup_id"
     else
         log_error "Database backup failed"
@@ -87,12 +88,13 @@ backup_terraform_state() {
     local state_bucket="keystone-tf-state-${PROJECT_ID}-${ENVIRONMENT}"
     local state_prefix="terraform/state"
     
+    local tf_exit=0
     gsutil -m cp -r \
         "gs://${state_bucket}/${state_prefix}/*" \
         "$BACKUP_DIR/$TIMESTAMP/terraform_state/" \
-        2>&1 | tee "$BACKUP_DIR/$TIMESTAMP/terraform_backup.log"
+        2>&1 | tee "$BACKUP_DIR/$TIMESTAMP/terraform_backup.log" || tf_exit=$?
     
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
+    if [ "$tf_exit" -eq 0 ]; then
         log_success "Terraform state backed up"
     else
         log_warning "Terraform state backup failed (may not exist yet)"
@@ -167,7 +169,7 @@ cleanup_old_backups() {
     local retention_days="${BACKUP_RETENTION_DAYS:-30}"
     
     # Cleanup local backups older than retention period
-    find "$BACKUP_DIR" -name "backup-*.tar.gz" -mtime +${retention_days} -delete
+    find "$BACKUP_DIR" -name "backup-*.tar.gz" -mtime +"${retention_days}" -delete
     
     # Cleanup GCS backups older than retention period
     gsutil -m rm -r \

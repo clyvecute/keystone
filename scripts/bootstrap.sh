@@ -16,7 +16,7 @@ warn() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 
 # Check dependencies
 for cmd in gcloud terraform; do
-    if ! command -v $cmd &> /dev/null; then
+    if ! command -v "$cmd" &> /dev/null; then
         echo "Error: $cmd is not installed."
         exit 1
     fi

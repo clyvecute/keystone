@@ -63,16 +63,15 @@ rotate_database_password() {
     local db_user="${DB_USER:-configra_user}"
     
     # Generate new password
-    local new_password=$(openssl rand -base64 32)
+    local new_password
+    new_password=$(openssl rand -base64 32)
     
     # Update database user password
     log_info "Updating database user password..."
-    gcloud sql users set-password "$db_user" \
+    if gcloud sql users set-password "$db_user" \
         --instance="$instance_name" \
         --password="$new_password" \
-        --project="$PROJECT_ID"
-    
-    if [ $? -eq 0 ]; then
+        --project="$PROJECT_ID"; then
         log_success "Database password updated"
     else
         log_error "Failed to update database password"
@@ -81,11 +80,9 @@ rotate_database_password() {
     
     # Update Secret Manager
     log_info "Updating Secret Manager..."
-    echo -n "$new_password" | gcloud secrets versions add "$secret_name" \
+    if echo -n "$new_password" | gcloud secrets versions add "$secret_name" \
         --data-file=- \
-        --project="$PROJECT_ID"
-    
-    if [ $? -eq 0 ]; then
+        --project="$PROJECT_ID"; then
         log_success "Secret Manager updated"
     else
         log_error "Failed to update Secret Manager"
@@ -94,7 +91,8 @@ rotate_database_password() {
     
     # Disable old secret versions (keep last 3)
     log_info "Disabling old secret versions..."
-    local versions=$(gcloud secrets versions list "$secret_name" \
+    local versions
+    versions=$(gcloud secrets versions list "$secret_name" \
         --project="$PROJECT_ID" \
         --format="value(name)" \
         --sort-by="~createTime" \
@@ -118,7 +116,8 @@ rotate_service_account_keys() {
     local sa_email="${APP_NAME}-${ENVIRONMENT}-sa@${PROJECT_ID}.iam.gserviceaccount.com"
     
     # List existing keys
-    local keys=$(gcloud iam service-accounts keys list \
+    local keys
+    keys=$(gcloud iam service-accounts keys list \
         --iam-account="$sa_email" \
         --format="value(name)" \
         --filter="keyType=USER_MANAGED")
@@ -128,11 +127,9 @@ rotate_service_account_keys() {
     local key_file="./keys/sa-key-$(date +%Y%m%d_%H%M%S).json"
     mkdir -p ./keys
     
-    gcloud iam service-accounts keys create "$key_file" \
+    if gcloud iam service-accounts keys create "$key_file" \
         --iam-account="$sa_email" \
-        --project="$PROJECT_ID"
-    
-    if [ $? -eq 0 ]; then
+        --project="$PROJECT_ID"; then
         log_success "New service account key created: $key_file"
         log_warning "IMPORTANT: Update GitHub secrets with new key"
         log_warning "Key location: $key_file"
@@ -143,16 +140,20 @@ rotate_service_account_keys() {
     
     # Delete old keys (older than 90 days)
     log_info "Checking for old keys to delete..."
-    local old_epoch=$(date -d "90 days ago" +%s 2>/dev/null || date -v-90d +%s)
+    local old_epoch
+    old_epoch=$(date -d "90 days ago" +%s 2>/dev/null || date -v-90d +%s)
     
     for key in $keys; do
-        local key_id=$(basename "$key")
-        local created_at=$(gcloud iam service-accounts keys describe "$key_id" \
+        local key_id
+        key_id=$(basename "$key")
+        local created_at
+        created_at=$(gcloud iam service-accounts keys describe "$key_id" \
             --iam-account="$sa_email" \
             --format="value(validAfterTime)" \
             --project="$PROJECT_ID")
         
-        local created_epoch=$(date -d "$created_at" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2>/dev/null)
+        local created_epoch
+        created_epoch=$(date -d "$created_at" +%s 2>/dev/null || date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2>/dev/null)
         
         if [ "$created_epoch" -lt "$old_epoch" ]; then
             log_warning "Deleting old key: $key_id (created: $created_at)"
@@ -185,7 +186,8 @@ verify_rotation() {
     local secret_name="${APP_NAME}-${ENVIRONMENT}-db-password"
     
     # Check latest secret version
-    local latest_version=$(gcloud secrets versions list "$secret_name" \
+    local latest_version
+    latest_version=$(gcloud secrets versions list "$secret_name" \
         --project="$PROJECT_ID" \
         --format="value(name)" \
         --sort-by="~createTime" \
