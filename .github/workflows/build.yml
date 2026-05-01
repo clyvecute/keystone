@@ -99,7 +99,7 @@ jobs:
 
       - name: Scan image for vulnerabilities
         if: env.WIF_PROVIDER != ''
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ steps.meta.outputs.tags }}
           format: 'sarif'
