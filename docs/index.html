@@ -8,7 +8,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90' fill='%23cc6eed'%3E⬡%3C/text%3E%3C/svg%3E" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
+    i.ph { display: inline-block; vertical-align: -0.15em; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -402,8 +404,6 @@
       padding-top: 2px;
     }
 
-    .feature-body {}
-
     .feature-title {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.8rem;
@@ -629,7 +629,7 @@
 
   <nav>
     <a href="#" class="nav-logo">
-      <div class="nav-logo-mark">⬡</div>
+      <div class="nav-logo-mark"><i class="ph ph-cube"></i></div>
       Keystone
     </a>
     <ul class="nav-links">
@@ -639,7 +639,7 @@
       <li><a href="#architecture">Architecture</a></li>
     </ul>
     <a href="https://github.com/clyvecute/keystone" target="_blank" class="nav-cta">
-      GitHub ↗
+      GitHub <i class="ph ph-arrow-up-right"></i>
     </a>
   </nav>
 
@@ -667,13 +667,13 @@
 
     <div class="hero-cta-row">
       <a href="https://github.com/clyvecute/keystone" target="_blank" class="hero-btn-primary">
-        View Source Code →
+        View Source Code <i class="ph ph-arrow-right"></i>
       </a>
       <a href="https://github.com/clyvecute/keystone/actions" target="_blank" class="hero-btn-ghost">
-        Live Pipelines
+        <i class="ph ph-activity"></i> Live Pipelines
       </a>
       <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" class="hero-btn-ghost">
-        Security Alerts
+        <i class="ph ph-shield-check"></i> Security Alerts
       </a>
     </div>
 
@@ -704,20 +704,20 @@
   <!-- TICKER -->
   <div class="ticker-wrap">
     <div class="ticker-inner">
-      <span class="ticker-item"><span>✦</span> ZERO-TRUST IDENTITY</span>
-      <span class="ticker-item"><span>✦</span> WORKLOAD IDENTITY FEDERATION</span>
-      <span class="ticker-item"><span>✦</span> AUTOMATED SECURITY SCANNING</span>
-      <span class="ticker-item"><span>✦</span> TERRAFORM IaC</span>
-      <span class="ticker-item"><span>✦</span> GOOGLE CLOUD PLATFORM</span>
-      <span class="ticker-item"><span>✦</span> CLOUD RUN · CLOUD SQL · KMS</span>
-      <span class="ticker-item"><span>✦</span> SHIFT-LEFT COST ENGINEERING</span>
-      <span class="ticker-item"><span>✦</span> ZERO-TRUST IDENTITY</span>
-      <span class="ticker-item"><span>✦</span> WORKLOAD IDENTITY FEDERATION</span>
-      <span class="ticker-item"><span>✦</span> AUTOMATED SECURITY SCANNING</span>
-      <span class="ticker-item"><span>✦</span> TERRAFORM IaC</span>
-      <span class="ticker-item"><span>✦</span> GOOGLE CLOUD PLATFORM</span>
-      <span class="ticker-item"><span>✦</span> CLOUD RUN · CLOUD SQL · KMS</span>
-      <span class="ticker-item"><span>✦</span> SHIFT-LEFT COST ENGINEERING</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> ZERO-TRUST IDENTITY</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> WORKLOAD IDENTITY FEDERATION</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> AUTOMATED SECURITY SCANNING</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> TERRAFORM IaC</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> GOOGLE CLOUD PLATFORM</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> CLOUD RUN · CLOUD SQL · KMS</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> SHIFT-LEFT COST ENGINEERING</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> ZERO-TRUST IDENTITY</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> WORKLOAD IDENTITY FEDERATION</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> AUTOMATED SECURITY SCANNING</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> TERRAFORM IaC</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> GOOGLE CLOUD PLATFORM</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> CLOUD RUN · CLOUD SQL · KMS</span>
+      <span class="ticker-item"><span><i class="ph ph-sparkle"></i></span> SHIFT-LEFT COST ENGINEERING</span>
     </div>
   </div>
 
@@ -732,7 +732,7 @@
       <!-- injected by JS -->
     </div>
     <p style="margin-top: 14px; font-size: 0.7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace;">
-      ↗ <a href="https://github.com/clyvecute/keystone/actions" target="_blank" style="color: var(--accent); text-decoration: none;">View all runs on GitHub Actions</a>
+      <a href="https://github.com/clyvecute/keystone/actions" target="_blank" style="color: var(--accent); text-decoration: none;">View all runs on GitHub Actions <i class="ph ph-arrow-up-right"></i></a>
       · refreshes every 10m
     </p>
   </section>
@@ -834,7 +834,7 @@
         <span class="scan-head-title" id="scan-header-title">security-scan.yml · fetching...</span>
         <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank"
            style="font-size: 0.7rem; color: var(--accent); text-decoration: none; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.06em;">
-          VIEW ALERTS ↗
+          VIEW ALERTS <i class="ph ph-arrow-up-right"></i>
         </a>
       </div>
       <div class="scan-row">
@@ -879,7 +879,7 @@
     </div>
     <div class="arch-grid">
       <div class="arch-cell">
-        <div class="arch-label">🔒 Security Perimeter</div>
+        <div class="arch-label"><i class="ph ph-shield-check"></i> Security Perimeter</div>
         <div class="arch-items">
           <div class="arch-item">Cloud Armor — WAF &amp; DDoS protection at the edge</div>
           <div class="arch-item">Binary Authorization — container image attestation</div>
@@ -888,7 +888,7 @@
         </div>
       </div>
       <div class="arch-cell">
-        <div class="arch-label">⚡ Compute Layer</div>
+        <div class="arch-label"><i class="ph ph-cpu"></i> Compute Layer</div>
         <div class="arch-items">
           <div class="arch-item">Cloud Run — serverless containers, min-instances=1 in prod</div>
           <div class="arch-item">VPC Serverless Connector — private networking egress</div>
@@ -896,7 +896,7 @@
         </div>
       </div>
       <div class="arch-cell">
-        <div class="arch-label">💾 Data Layer</div>
+        <div class="arch-label"><i class="ph ph-database"></i> Data Layer</div>
         <div class="arch-items">
           <div class="arch-item">Cloud SQL PostgreSQL — regional HA, automatic failover</div>
           <div class="arch-item">Private IP only — zero public database exposure</div>
@@ -905,7 +905,7 @@
         </div>
       </div>
       <div class="arch-cell">
-        <div class="arch-label">📊 Observability</div>
+        <div class="arch-label"><i class="ph ph-chart-line-up"></i> Observability</div>
         <div class="arch-items">
           <div class="arch-item">Cloud Monitoring — dashboards and alerts as code</div>
           <div class="arch-item">Cloud Logging — structured audit log sinks</div>
@@ -932,10 +932,10 @@
     const API  = `https://api.github.com/repos/${REPO}`;
 
     const WORKFLOWS = [
-      { id: 'build.yml',         label: 'Build & Push',    desc: 'Docker build → container registry → SBOM generation → Trivy scan',    icon: '🏗️' },
-      { id: 'test.yml',          label: 'Infra Tests',     desc: 'Terraform validate + fmt, ShellCheck, Go preflight validator',          icon: '✅' },
-      { id: 'security-scan.yml', label: 'Security Scan',   desc: 'tfsec, Checkov, Trivy, Gitleaks, TruffleHog, OSSF Scorecard',          icon: '🛡️' },
-      { id: 'deploy.yml',        label: 'Deploy',          desc: 'Terraform apply → health check → Slack notification → rollback on fail', icon: '🚀' },
+      { id: 'build.yml',         label: 'Build & Push',    desc: 'Docker build · container registry · SBOM generation · Trivy scan',    icon: '<i class="ph ph-package"></i>' },
+      { id: 'test.yml',          label: 'Infra Tests',     desc: 'Terraform validate + fmt, ShellCheck, Go preflight validator',          icon: '<i class="ph ph-check-circle"></i>' },
+      { id: 'security-scan.yml', label: 'Security Scan',   desc: 'tfsec, Checkov, Trivy, Gitleaks, TruffleHog, OSSF Scorecard',          icon: '<i class="ph ph-shield-check"></i>' },
+      { id: 'deploy.yml',        label: 'Deploy',          desc: 'Terraform apply · health check · Slack notification · rollback on fail', icon: '<i class="ph ph-rocket-launch"></i>' },
     ];
 
     function statusClass(conclusion, status) {
