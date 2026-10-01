@@ -20,6 +20,36 @@ variable "container_image" {
   type        = string
 }
 
+variable "cloud_run_min_instances" {
+  description = "Minimum warm Cloud Run instances for production; tune against latency and cost measurements."
+  type        = number
+  default     = 1
+  validation {
+    condition     = var.cloud_run_min_instances >= 0 && var.cloud_run_min_instances <= 100
+    error_message = "cloud_run_min_instances must be between 0 and 100."
+  }
+}
+
+variable "cloud_run_max_instances" {
+  description = "Maximum Cloud Run instances for production; keep within quota and database connection capacity."
+  type        = number
+  default     = 100
+  validation {
+    condition     = var.cloud_run_max_instances >= 1 && var.cloud_run_max_instances <= 1000
+    error_message = "cloud_run_max_instances must be between 1 and 1000; confirm project quota before increasing it."
+  }
+}
+
+variable "cloud_run_container_concurrency" {
+  description = "Maximum simultaneous requests per Cloud Run instance; tune with representative load tests."
+  type        = number
+  default     = 80
+  validation {
+    condition     = var.cloud_run_container_concurrency >= 1 && var.cloud_run_container_concurrency <= 1000
+    error_message = "cloud_run_container_concurrency must be between 1 and 1000."
+  }
+}
+
 variable "allow_public_access" {
   description = "Allow public access to the service"
   type        = bool

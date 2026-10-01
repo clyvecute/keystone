@@ -2,6 +2,8 @@
 
 A lightweight Go utility that validates your environment is ready for Keystone deployment.
 
+Independent checks run concurrently with a maximum of four checks at a time. Results remain in the documented check order, and required failures continue to block deployment.
+
 ## What It Checks
 
 ### Required Checks (Must Pass)

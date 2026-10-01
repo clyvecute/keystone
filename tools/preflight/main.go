@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -27,14 +28,14 @@ type CheckResult struct {
 
 // PreflightReport contains all check results
 type PreflightReport struct {
-	Timestamp    time.Time
-	Environment  string
-	TotalChecks  int
-	Passed       int
-	Failed       int
-	Warnings     int
-	Checks       []CheckResultWithName
-	CanDeploy    bool
+	Timestamp   time.Time
+	Environment string
+	TotalChecks int
+	Passed      int
+	Failed      int
+	Warnings    int
+	Checks      []CheckResultWithName
+	CanDeploy   bool
 }
 
 // CheckResultWithName combines check name with result
@@ -142,21 +143,34 @@ func runChecks(checks []PreflightCheck) PreflightReport {
 		Timestamp:   time.Now(),
 		Environment: environment,
 		TotalChecks: len(checks),
-		Checks:      make([]CheckResultWithName, 0, len(checks)),
+		Checks:      make([]CheckResultWithName, len(checks)),
 	}
 
-	for _, check := range checks {
-		result := check.Check()
-		
-		checkResult := CheckResultWithName{
-			Name:     check.Name,
-			Required: check.Required,
-			Result:   result,
-		}
-		
-		report.Checks = append(report.Checks, checkResult)
+	// Bound concurrent subprocesses to keep CI and local environments responsive.
+	const maxConcurrentChecks = 4
+	semaphore := make(chan struct{}, maxConcurrentChecks)
+	var wg sync.WaitGroup
 
-		if result.Passed {
+	for i, check := range checks {
+		wg.Add(1)
+		go func(index int, check PreflightCheck) {
+			defer wg.Done()
+			semaphore <- struct{}{}
+			result := check.Check()
+			<-semaphore
+
+			report.Checks[index] = CheckResultWithName{
+				Name:     check.Name,
+				Required: check.Required,
+				Result:   result,
+			}
+		}(i, check)
+	}
+	wg.Wait()
+
+	for _, check := range report.Checks {
+
+		if check.Result.Passed {
 			report.Passed++
 		} else {
 			if check.Required {
@@ -181,7 +195,7 @@ func printReport(report PreflightReport) {
 	for _, check := range report.Checks {
 		status := "✓"
 		color := "\033[32m" // Green
-		
+
 		if !check.Result.Passed {
 			if check.Required {
 				status = "✗"
@@ -216,13 +230,13 @@ func outputJSON(report PreflightReport) {
 		fmt.Fprintf(os.Stderr, "Error generating JSON: %v\n", err)
 		return
 	}
-	
+
 	filename := fmt.Sprintf("preflight-report-%s.json", time.Now().Format("20060102-150405"))
 	if err := os.WriteFile(filename, data, 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing JSON: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("\n📄 Report saved to: %s\n", filename)
 }
 
@@ -249,7 +263,7 @@ func checkGcloudAuthenticated() CheckResult {
 
 	cmd := exec.CommandContext(ctx, "gcloud", "auth", "list", "--filter=status:ACTIVE", "--format=value(account)")
 	output, err := cmd.Output()
-	
+
 	if err != nil || len(strings.TrimSpace(string(output))) == 0 {
 		return CheckResult{
 			Passed:  false,
@@ -257,7 +271,7 @@ func checkGcloudAuthenticated() CheckResult {
 			Details: "Run: gcloud auth login",
 		}
 	}
-	
+
 	account := strings.TrimSpace(string(output))
 	return CheckResult{
 		Passed:  true,
@@ -287,7 +301,7 @@ func checkTerraformVersion() CheckResult {
 
 	cmd := exec.CommandContext(ctx, "terraform", "version", "-json")
 	output, err := cmd.Output()
-	
+
 	if err != nil {
 		return CheckResult{
 			Passed:  false,
@@ -299,7 +313,7 @@ func checkTerraformVersion() CheckResult {
 	var versionInfo struct {
 		TerraformVersion string `json:"terraform_version"`
 	}
-	
+
 	if err := json.Unmarshal(output, &versionInfo); err != nil {
 		return CheckResult{
 			Passed:  false,
@@ -365,7 +379,7 @@ func checkRequiredAPIs() CheckResult {
 	cmd := exec.CommandContext(ctx, "gcloud", "services", "list",
 		"--enabled", "--project="+projectID, "--format=value(name)")
 	output, err := cmd.Output()
-	
+
 	if err != nil {
 		return CheckResult{
 			Passed:  false,
@@ -411,13 +425,13 @@ func checkStateBucketExists() CheckResult {
 
 	// Use the dynamic naming convention from bootstrap.sh
 	bucketName := fmt.Sprintf("keystone-tf-state-%s-%s", projectID, environment)
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "gcloud", "storage", "buckets", "describe", "gs://"+bucketName, "--project="+projectID)
 	err := cmd.Run()
-	
+
 	if err != nil {
 		return CheckResult{
 			Passed:  false,
@@ -446,7 +460,7 @@ func checkKMSKeyringExists() CheckResult {
 
 	cmd := exec.CommandContext(ctx, "gcloud", "kms", "keyrings", "describe", keyringName,
 		"--location="+region, "--project="+projectID)
-	
+
 	if err := cmd.Run(); err != nil {
 		return CheckResult{
 			Passed:  false,
@@ -464,13 +478,13 @@ func checkKMSKeyringExists() CheckResult {
 
 func checkBackupBucketExists() CheckResult {
 	bucketName := fmt.Sprintf("keystone-backups-%s", projectID)
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, "gsutil", "ls", "-b", "gs://"+bucketName)
 	err := cmd.Run()
-	
+
 	if err != nil {
 		return CheckResult{
 			Passed:  false,
@@ -505,7 +519,7 @@ func checkTerraformFormatted() CheckResult {
 
 	cmd := exec.CommandContext(ctx, "terraform", "fmt", "-check", "-recursive", "terraform/")
 	err := cmd.Run()
-	
+
 	if err != nil {
 		return CheckResult{
 			Passed:  false,
