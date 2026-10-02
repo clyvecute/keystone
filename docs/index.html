@@ -12,8 +12,6 @@
 :root {
   --y: rgb(235,169,55);      /* Striking Amber Yellow primary background */
   --ink: #17120A;           /* Black ink for text, hex cards & borders */
-  --w: clamp(104px,27vw,210px);
-  --h: calc(var(--w)*1.1547);
 }
 * { box-sizing: border-box; margin: 0; }
 html { scroll-behavior: smooth; }
@@ -21,11 +19,19 @@ body {
   background: var(--y);
   color: var(--ink);
   font: 400 16px/1.5 Archivo, system-ui, sans-serif;
+  position: relative;
+  min-height: 100vh;
 }
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
 
-.wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 48px); }
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(20px, 4vw, 48px);
+  position: relative;
+  z-index: 1;
+}
 
 nav {
   display: flex;
@@ -55,15 +61,9 @@ nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
   position: relative;
 }
 .hero .sub { max-width: 34ch; margin: 28px 0 0; font-size: clamp(16px, 1.8vw, 20px); }
-.hero .hexes {
-  position: absolute;
-  right: 0;
-  top: 12%;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  pointer-events: none;
-}
+
+
+
 .pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 36px; }
 .pill {
   border: 1.5px solid var(--ink);
@@ -91,53 +91,69 @@ h2 {
 }
 .lead { max-width: 46ch; margin: 22px 0 0; font-size: 18px; }
 
-/* Honeycomb */
-.comb { margin-top: 56px; }
-.row {
-  display: flex;
-  gap: calc(var(--w) * .02);
-  margin-top: calc(var(--h) * -.245);
+/* VECTOR HONEYCOMB STYLING */
+.honeycomb-svg-wrap {
+  width: 100%;
+  max-width: 660px;
+  margin: 48px auto 0;
 }
-.row:first-child { margin-top: 0; }
-.row.off { margin-left: calc(var(--w) * .51); }
+.honeycomb-svg-wrap svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  display: block;
+}
 
-.hex {
-  width: var(--w);
-  height: var(--h);
-  flex: none;
-  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-  background: var(--ink);
-  color: var(--y);
-  border: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 0 14%;
-  font: inherit;
+.hex-cell {
   cursor: pointer;
-  transition: background .2s, color .2s, transform .2s;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.hex b {
-  font: 400 clamp(11px, 2.1vw, 20px)/1.1 'Archivo Black';
-  letter-spacing: -.01em;
+.hex-cell polygon {
+  fill: var(--ink);
+  stroke: var(--y);
+  stroke-width: 2.5;
+  transition: fill 0.25s ease, stroke 0.25s ease;
 }
-.hex small { font-size: clamp(9px, 1.3vw, 12px); margin-top: 6px; opacity: .8; }
-.hex:hover, .hex[aria-pressed=true] {
-  background: #ffffff;
-  color: var(--ink);
-  transform: scale(1.04);
+.hex-cell text {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 13.5px;
+  fill: var(--y);
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  transition: fill 0.25s ease;
+}
+.hex-cell:hover polygon, .hex-cell.active polygon {
+  fill: #ffffff;
+  stroke: var(--ink);
+}
+.hex-cell:hover text, .hex-cell.active text {
+  fill: var(--ink);
 }
 
-.hex.stat {
-  cursor: default;
-  background: var(--ink);
-  box-shadow: none;
-  position: relative;
+/* STATS HONEYCOMB */
+.hex-stat-cell polygon {
+  fill: var(--ink);
+  stroke: var(--y);
+  stroke-width: 2.5;
 }
-.hex.stat b { font-size: clamp(26px, 6vw, 64px); }
+.hex-stat-cell text.val {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 36px;
+  fill: var(--y);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.hex-stat-cell text.lbl {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 500;
+  font-size: 11px;
+  fill: rgba(235,169,55,0.85);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
 
+/* DETAIL BOX */
 .detail {
   margin-top: 40px;
   border-top: 2px solid var(--ink);
@@ -145,7 +161,7 @@ h2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px 40px;
-  min-height: 150px;
+  min-height: 140px;
 }
 .detail h3 {
   font: 400 clamp(24px, 3.6vw, 40px)/1 'Archivo Black';
@@ -161,7 +177,7 @@ h2 {
   background: rgba(255, 255, 255, 0.4);
 }
 
-/* Lists */
+/* LIST ROWS */
 .rows { margin-top: 48px; border-top: 2px solid var(--ink); }
 .rows a, .rows div.r {
   display: grid;
@@ -200,13 +216,12 @@ footer .pills { margin-top: 30px; }
 footer p { margin-top: 24px; font-size: 13px; }
 
 @media(max-width:820px){
- .hero .hexes { display: none; }
  .detail, .arch { grid-template-columns: 1fr; }
  .arch div { margin-bottom: 28px; }
  .rows a, .rows div.r { grid-template-columns: 1fr auto; }
  .rows .d { grid-column: 1/-1; order: 3; font-size: 14px; }
 }
-@media(prefers-reduced-motion:reduce){ * { transition: none !important; scroll-behavior: auto !important; } }
+@media(prefers-reduced-motion:reduce){ * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 </style>
 </head>
 <body>
@@ -229,17 +244,90 @@ footer p { margin-top: 24px; font-size: 13px; }
 <section id="pipelines">
  <h2>Pipelines</h2>
  <p class="lead">Every commit triggers validation, security scanning and deployment. Latest runs come straight from GitHub Actions.</p>
- <div class="comb" aria-label="Key figures">
-  <div class="row"><div class="hex stat"><b>4</b><small>CI/CD pipelines</small></div><div class="hex stat"><b>7+</b><small>security scanners</small></div><div class="hex stat"><b>0</b><small>secrets stored</small></div></div>
-  <div class="row off"><div class="hex stat"><b>$25</b><small>dev per month</small></div><div class="hex stat"><b>$425</b><small>prod per month</small></div></div>
+ 
+ <div class="honeycomb-svg-wrap" aria-label="Key figures">
+  <svg viewBox="0 0 600 250">
+    <!-- Row 1: 3 Stat Hexes -->
+    <g class="hex-stat-cell" transform="translate(170, 70)">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10" class="val">4</text>
+      <text y="18" class="lbl">CI/CD pipelines</text>
+    </g>
+    <g class="hex-stat-cell" transform="translate(300, 70)">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10" class="val">7+</text>
+      <text y="18" class="lbl">security scanners</text>
+    </g>
+    <g class="hex-stat-cell" transform="translate(430, 70)">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10" class="val">0</text>
+      <text y="18" class="lbl">secrets stored</text>
+    </g>
+    <!-- Row 2: 2 Stat Hexes centered -->
+    <g class="hex-stat-cell" transform="translate(235, 175)">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10" class="val">$25</text>
+      <text y="18" class="lbl">dev per month</text>
+    </g>
+    <g class="hex-stat-cell" transform="translate(365, 175)">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10" class="val">$425</text>
+      <text y="18" class="lbl">prod per month</text>
+    </g>
+  </svg>
  </div>
+
  <div class="rows" id="runs"><div class="r"><span class="t">Loading runs&#8230;</span><span class="d"></span><span></span></div></div>
 </section>
 
 <section id="decisions">
  <h2>Decisions</h2>
  <p class="lead">Six choices that shape how Keystone is built. Select a cell to read more.</p>
- <div class="comb" id="comb"></div>
+ 
+ <!-- Symmetrical 3-2-1 Honeycomb Grid centered at X=300 -->
+ <div class="honeycomb-svg-wrap">
+  <svg viewBox="0 0 600 350">
+    <!-- Row 1: 3 Hexes -->
+    <g class="hex-cell active" id="hex-0" transform="translate(170, 70) scale(1.06)" onclick="selectHex(0)" tabindex="0" role="button" aria-pressed="true">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10">Zero-trust</text>
+      <text y="12">identity</text>
+    </g>
+
+    <g class="hex-cell" id="hex-1" transform="translate(300, 70)" onclick="selectHex(1)" tabindex="0" role="button" aria-pressed="false">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10">Layered</text>
+      <text y="12">security</text>
+    </g>
+
+    <g class="hex-cell" id="hex-2" transform="translate(430, 70)" onclick="selectHex(2)" tabindex="0" role="button" aria-pressed="false">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10">Modular</text>
+      <text y="12">Terraform</text>
+    </g>
+
+    <!-- Row 2: 2 Hexes Centered -->
+    <g class="hex-cell" id="hex-3" transform="translate(235, 175)" onclick="selectHex(3)" tabindex="0" role="button" aria-pressed="false">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10">Go preflight</text>
+      <text y="12">check</text>
+    </g>
+
+    <g class="hex-cell" id="hex-4" transform="translate(365, 175)" onclick="selectHex(4)" tabindex="0" role="button" aria-pressed="false">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10">Cost-aware</text>
+      <text y="12">deploys</text>
+    </g>
+
+    <!-- Row 3: 1 Hex Centered -->
+    <g class="hex-cell" id="hex-5" transform="translate(300, 280)" onclick="selectHex(5)" tabindex="0" role="button" aria-pressed="false">
+      <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
+      <text y="-10">Failure-first</text>
+      <text y="12">runbooks</text>
+    </g>
+  </svg>
+ </div>
+
  <div class="detail" id="detail" aria-live="polite"></div>
 </section>
 
@@ -280,12 +368,34 @@ const D=[
 ["Go preflight check","A custom Go binary verifies GCP quotas, enabled APIs and credentials before Terraform runs, so failures happen early.",["go","gcloud sdk"]],
 ["Cost-aware deploys","Infracost comments the cost change on every pull request that touches Terraform. Budget is an engineering constraint.",["infracost","$25 dev","$425 prod"]],
 ["Failure-first runbooks","Each failure mode has documented recovery steps and time estimates, written for 3 AM incidents.",["runbooks","MTTR","DR"]]];
-const comb=document.getElementById('comb'),det=document.getElementById('detail');
-[[0,1,2],[3,4,5]].forEach((r,i)=>{const row=document.createElement('div');row.className='row'+(i?' off':'');
- r.forEach(n=>{const b=document.createElement('button');b.className='hex';b.type='button';b.innerHTML='<b>'+D[n][0]+'</b>';b.onclick=()=>show(n);row.append(b)});comb.append(row)});
-function show(n){document.querySelectorAll('#comb .hex').forEach((h,i)=>{h.setAttribute('aria-pressed',i==n)});
- det.innerHTML='<h3>'+D[n][0]+'</h3><div><p>'+D[n][1]+'</p><div class="tags">'+D[n][2].map(t=>'<span>'+t+'</span>').join('')+'</div></div>'}
-show(0);
+
+const hexCoords = [
+  [170, 70],
+  [300, 70],
+  [430, 70],
+  [235, 175],
+  [365, 175],
+  [300, 280]
+];
+
+function selectHex(n) {
+  document.querySelectorAll('.hex-cell').forEach((el, idx) => {
+    const [cx, cy] = hexCoords[idx];
+    if (idx === n) {
+      el.classList.add('active');
+      el.setAttribute('aria-pressed', 'true');
+      el.setAttribute('transform', 'translate(' + cx + ', ' + cy + ') scale(1.06)');
+    } else {
+      el.classList.remove('active');
+      el.setAttribute('aria-pressed', 'false');
+      el.setAttribute('transform', 'translate(' + cx + ', ' + cy + ')');
+    }
+  });
+  const det = document.getElementById('detail');
+  det.innerHTML = '<h3>' + D[n][0] + '</h3><div><p>' + D[n][1] + '</p><div class="tags">' + D[n][2].map(t => '<span>' + t + '</span>').join('') + '</div></div>';
+}
+selectHex(0);
+
 // live data
 const API='https://api.github.com/repos/clyvecute/keystone/actions/runs?per_page=100';
 fetch(API).then(r=>r.json()).then(j=>{
