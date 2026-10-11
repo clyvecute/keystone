@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      configra_ref:
+        description: Configra branch, tag, or commit to build
+        required: true
+        type: string
+        default: main
 
 env:
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -37,11 +43,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Checkout Configra source
+        id: configra
+        uses: actions/checkout@v5
+        with:
+          repository: clyvecute/configra
+          ref: ${{ inputs.configra_ref || 'main' }}
+          path: configra-src
+
       - name: Check Secrets
         run: |
-          if [ -z "${{ secrets.GCP_PROJECT_ID }}" ]; then echo "::warning::GCP_PROJECT_ID not set — GCP steps will be skipped."; fi
-          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then echo "::warning::WIF_PROVIDER not set — GCP auth steps will be skipped."; fi
-          if [ -z "${{ secrets.WIF_SERVICE_ACCOUNT }}" ]; then echo "::warning::WIF_SERVICE_ACCOUNT not set — GCP auth steps will be skipped."; fi
+          test -n "$GCP_PROJECT_ID" || { echo "GCP_PROJECT_ID is required for Configra image publishing"; exit 1; }
+          test -n "$WIF_PROVIDER" || { echo "WIF_PROVIDER is required for Configra image publishing"; exit 1; }
+          test -n "$WIF_SERVICE_ACCOUNT" || { echo "WIF_SERVICE_ACCOUNT is required for Configra image publishing"; exit 1; }
 
       - name: Authenticate to Google Cloud
         if: env.WIF_PROVIDER != ''
@@ -64,28 +78,38 @@ jobs:
         with:
           images: gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=sha,prefix={{branch}}-
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=${{ steps.configra.outputs.commit }}
+            type=raw,value=main
 
       - name: Build and push Docker image
         id: build
         if: env.WIF_PROVIDER != ''
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: configra-src
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Save Configra source revision
+        if: env.WIF_PROVIDER != ''
+        run: printf '%s' '${{ steps.configra.outputs.commit }}' > configra-source-revision.txt
+
+      - name: Upload Configra source revision
+        if: env.WIF_PROVIDER != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: configra-source-revision
+          path: configra-source-revision.txt
+          retention-days: 7
+
       - name: Generate SBOM
         if: env.WIF_PROVIDER != ''
         uses: anchore/sbom-action@v0
         with:
-          image: ${{ steps.meta.outputs.tags }}
+          image: gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ steps.configra.outputs.commit }}
           format: spdx-json
           output-file: sbom.spdx.json
 
@@ -101,7 +125,7 @@ jobs:
         if: env.WIF_PROVIDER != ''
         uses: aquasecurity/trivy-action@v0.35.0
         with:
-          image-ref: ${{ steps.meta.outputs.tags }}
+          image-ref: gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ steps.configra.outputs.commit }}
           format: 'sarif'
           output: 'trivy-results.sarif'
 

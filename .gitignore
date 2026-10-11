@@ -12,3 +12,6 @@ tools/preflight/preflight.exe
 crash.log
 *.tfvars
 override.tf
+
+.env
+

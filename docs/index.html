@@ -261,7 +261,7 @@ footer p { margin-top: 24px; font-size: 13px; }
     <g class="hex-stat-cell" transform="translate(430, 70)">
       <polygon points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30" />
       <text y="-10" class="val">0</text>
-      <text y="18" class="lbl">secrets stored</text>
+      <text y="18" class="lbl">long-lived keys in repo</text>
     </g>
     <!-- Row 2: 2 Stat Hexes centered -->
     <g class="hex-stat-cell" transform="translate(235, 175)">
@@ -337,8 +337,8 @@ footer p { margin-top: 24px; font-size: 13px; }
  <div class="rows">
   <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" rel="noopener"><span class="t">Terraform analysis</span><span class="d">tfsec and Checkov check infrastructure code for misconfigurations.</span><span class="st" data-job="iac">checking</span></a>
   <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" rel="noopener"><span class="t">Container scan</span><span class="d">Trivy scans the filesystem for known vulnerabilities.</span><span class="st" data-job="container">checking</span></a>
-  <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" rel="noopener"><span class="t">Secret detection</span><span class="d">Gitleaks and TruffleHog search the full git history.</span><span class="st" data-job="secret">checking</span></a>
-  <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" rel="noopener"><span class="t">Supply chain</span><span class="d">Snyk and OpenSSF Scorecard audit dependencies.</span><span class="st" data-job="supply">checking</span></a>
+  <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" rel="noopener"><span class="t">Secret detection</span><span class="d">TruffleHog scans repository history for verified secrets.</span><span class="st" data-job="secret">checking</span></a>
+  <a href="https://github.com/clyvecute/keystone/security/code-scanning" target="_blank" rel="noopener"><span class="t">Supply chain</span><span class="d">OpenSSF Scorecard evaluates repository supply-chain practices.</span><span class="st" data-job="supply">checking</span></a>
  </div>
 </section>
 
@@ -346,8 +346,8 @@ footer p { margin-top: 24px; font-size: 13px; }
  <h2>Architecture</h2>
  <p class="lead">Serverless-first on GCP with private networking and managed services. No Kubernetes to run.</p>
  <div class="arch">
-  <div><h3>Perimeter</h3><ul><li>Cloud Armor blocks attacks at the edge</li><li>Binary Authorization verifies container images</li><li>Secret Manager holds runtime config</li><li>KMS manages your own encryption keys</li></ul></div>
-  <div><h3>Compute</h3><ul><li>Cloud Run, one instance always warm in prod</li><li>VPC connector keeps egress private</li><li>HTTPS load balancer ends TLS globally</li></ul></div>
+  <div><h3>Perimeter</h3><ul><li>Cloud Armor rate-limit policy is defined; it needs a load balancer attachment to filter ingress</li><li>Binary Authorization policy is configurable</li><li>Secret Manager holds the database password</li><li>KMS keys encrypt supported resources</li></ul></div>
+  <div><h3>Compute</h3><ul><li>Terraform targets Cloud Run with configurable production scaling</li><li>VPC connector provides private network access</li><li>Global HTTPS load balancer and CDN are roadmap items</li></ul></div>
   <div><h3>Data</h3><ul><li>Cloud SQL PostgreSQL with regional failover</li><li>Private IP only, no public exposure</li><li>GCS storage with lifecycle rules</li><li>Deletion protection in production</li></ul></div>
   <div><h3>Observability</h3><ul><li>Dashboards and alerts defined as code</li><li>Structured audit logs</li><li>BigQuery keeps 12 months of forensics</li><li>External uptime checks</li></ul></div>
  </div>

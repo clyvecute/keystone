@@ -31,6 +31,7 @@ jobs:
 
     permissions:
       contents: read
+      actions: read
       id-token: write
 
     # Map secrets to env — secrets context cannot be used in if: expressions
@@ -43,19 +44,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Configra source revision
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        with:
+          name: configra-source-revision
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Set Configra image revision
+        if: github.event_name == 'workflow_run'
+        run: echo "CONFIGRA_SOURCE_REVISION=$(cat configra-source-revision.txt)" >> "$GITHUB_ENV"
+
       - name: Check Secrets
         run: |
-          if [ -z "${{ secrets.WIF_PROVIDER }}" ]; then echo "::warning::WIF_PROVIDER not set — GCP steps will be skipped."; fi
+          test -n "${{ secrets.GCP_PROJECT_ID }}" || { echo "GCP_PROJECT_ID is required"; exit 1; }
+          test -n "${{ secrets.WIF_PROVIDER }}" || { echo "WIF_PROVIDER is required"; exit 1; }
+          test -n "${{ secrets.WIF_SERVICE_ACCOUNT }}" || { echo "WIF_SERVICE_ACCOUNT is required"; exit 1; }
 
       - name: Authenticate to Google Cloud
-        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
-        if: env.WIF_PROVIDER != ''
         uses: google-github-actions/setup-gcloud@v2
 
       - name: Setup Terraform
@@ -64,37 +77,33 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Terraform Init
-        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
-          terraform init
+          terraform init -backend-config="bucket=keystone-tf-state-${GCP_PROJECT_ID}-dev"
 
       - name: Terraform Plan
-        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
           terraform plan -out=tfplan \
             -var="project_id=${{ env.GCP_PROJECT_ID }}" \
-            -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
+            -var="container_image=gcr.io/$GCP_PROJECT_ID/configra:$CONFIGRA_SOURCE_REVISION"
 
       - name: Terraform Apply
-        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
           terraform apply -auto-approve tfplan
 
       - name: Get Service URL
         id: service-url
-        if: env.WIF_PROVIDER != ''
         run: |
           cd terraform/environments/dev
           echo "url=$(terraform output -raw service_url)" >> $GITHUB_OUTPUT
 
       - name: Run Health Check
-        if: env.WIF_PROVIDER != ''
         run: |
           chmod +x scripts/healthcheck.sh
           ./scripts/healthcheck.sh ${{ steps.service-url.outputs.url }}
+          curl --fail --retry 12 --retry-delay 5 --retry-connrefused "${{ steps.service-url.outputs.url }}/ready"
 
       - name: Notify Deployment
         if: always() && env.SLACK_WEBHOOK != ''

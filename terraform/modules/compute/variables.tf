@@ -95,3 +95,9 @@ variable "attestation_authority_note" {
   type        = string
   default     = ""
 }
+
+variable "secret_env_vars" {
+  description = "Secret Manager environment variables keyed by environment variable name"
+  type        = map(object({ secret_id = string, version = optional(string, "latest") }))
+  default     = {}
+}

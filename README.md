@@ -1,8 +1,8 @@
 # Keystone
 
-**Enterprise-Grade Infrastructure-as-Code (IaC) for Mission-Critical Applications.**
+Terraform for running one containerized app on Google Cloud, with security checks, cost estimates and recovery notes built into the repo.
 
-Keystone is a battle-hardened infrastructure foundation designed for organizations that require high-availability, zero-trust security, and operational excellence on Google Cloud Platform. It moves beyond simple cloud deployments into **automated, self-healing, and cost-aware operations**.
+I built it to learn how a production setup fits together on GCP, and to have a reusable base for my own projects. [Fill in: what app, if any, you have deployed with it, or say plainly that it is a template with no app on it yet.]
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Portfolio%20Dashboard-6366f1?style=flat&logo=github)](https://clyvecute.github.io/keystone/)
 [![Security Scan](https://github.com/clyvecute/keystone/actions/workflows/security-scan.yml/badge.svg)](https://github.com/clyvecute/keystone/actions/workflows/security-scan.yml)
@@ -10,157 +10,110 @@ Keystone is a battle-hardened infrastructure foundation designed for organizatio
 [![Infrastructure Tests](https://github.com/clyvecute/keystone/actions/workflows/test.yml/badge.svg)](https://github.com/clyvecute/keystone/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-black.svg)](https://opensource.org/licenses/MIT)
 
-> 🔗 **[Live Portfolio Dashboard →](https://clyvecute.github.io/keystone/)** — Real-time pipeline status, security posture, and architecture overview.
+Live status page: <https://clyvecute.github.io/keystone/>
 
 ---
 
-## Executive Summary
+## What it sets up
 
-Keystone solves the "last-mile" problems of cloud infrastructure. While most IaC projects stop at resource provisioning, Keystone implements the internal controls, security safeguards, and observability patterns required by enterprise compliance (SOC2/ISO27001) and high-scale production environments.
+- **Compute:** one Cloud Run service. Production keeps 1 instance warm and scales up to 100, with 80 concurrent requests per instance.
+- **Database:** Cloud SQL for PostgreSQL with regional high availability, reachable only over a private IP.
+- **Encryption and secrets:** keys managed in Cloud KMS, runtime config in Secret Manager.
+- **Networking:** a VPC connector so Cloud Run reaches the database privately.
+- **Monitoring:** dashboards and alerts defined in Terraform, audit logs sent to BigQuery for 12 months.
+- **Environments:** reusable modules with separate dev and prod settings, and remote state in a GCS bucket.
 
-### Core Value Pillars
-
-*   **Security by Default:** Zero-trust architecture with identity federation, CMEK encryption, and automated WAF policies.
-*   **Operational Maturity:** Custom Go-based preflight validation and failure-first runbooks reduce MTTR (Mean Time To Recovery).
-*   **Economic Engineering:** Integrated cost-tracking (Infracost) treats budget as a primary engineering constraint, not an afterthought.
-*   **Verified Reliability:** Programmatic infrastructure testing via `terraform test` prevents configuration drift and security regressions.
-
----
-
-## What Makes Keystone Different?
-
-**Most portfolios show you can deploy. Keystone shows you can *operate* at scale.**
-
-| Feature | Keystone Implementation | Business Value |
-|:---|:---|:---|
-| **Pre-Deployment Audit** | **Go Preflight Engineer**: Custom Go binary validating GCP quotas, APIs, IAM, and state buckets before Terraform runs. | Prevents pipeline failures and deployment bottlenecks. |
-| **Multi-Layer Security** | **Automated Security Suite**: 4 parallel workflows running `tfsec`, `Checkov` (IaC), `Trivy` (CVEs), `TruffleHog` & `Gitleaks` (Secrets), and `OSSF Scorecard`. | Minimizes attack surface, prevents key leaks, and ensures SOC2 compliance. |
-| **Shift-Left FinOps** | **Cost Transparency**: Automated PR cost-delta analysis via `Infracost` treats budget as a primary engineering constraint. | Prevents cloud bill shockers and optimizes OPEX. |
-| **Zero-Trust Identity** | **Keyless Authentication**: Workload Identity Federation (WIF) with OIDC eliminates long-lived service account keys. | Removes the #1 cause of cloud breaches (leaked access keys). |
-| **Operational Dashboards** | **Live Status Site**: Real-time status dashboard hosted on GitHub Pages powered by the GitHub REST API. | Full operational visibility for engineering teams and stakeholders. |
-| **Failure Playbooks** | **Antifragile Docs**: Deep failure-mode analysis and incident recovery runbooks for 3 AM outages. | Reduces MTTR and increases engineering confidence. |
+[Fill in: confirm whether Cloud Armor and Binary Authorization are actually deployed. Cloud Armor needs a load balancer in front of the service, and the compute module does not create one. See "Not done yet" below.]
 
 ---
 
-## Detailed System Architecture
+## How the pipelines work
 
-Keystone leverages a modular, decoupled architecture to ensure scalability and maintainability.
+Three GitHub Actions workflows run on the repo: `build.yml`, `test.yml` and `security-scan.yml`.
 
-```mermaid
-graph TD
-    subgraph "GCP Project (Isolated Environment)"
-        subgraph "Private Networking Layer"
-            CR[Cloud Run: Serverless Compute]
-            VPC_CONN[VPC Serverless Connector]
-            DB[(Cloud SQL: PostgreSQL)]
-            KMS[KMS: CMEK Encryption Service]
-        end
-        
-        subgraph "Enterprise Security Perimeter"
-            CA[Cloud Armor: WAF/DDoS Protection]
-            BA[Binary Authorization: Container Attestation]
-            SM[Secret Manager: Encrypted Config]
-        end
-        
-        subgraph "Observability & Compliance"
-            MON[Cloud Monitoring: Dashboards-as-Code]
-            LOG[Cloud Logging: Integrated Audit Sinks]
-            BQ[BigQuery: 12-Month Security Forensics]
-        end
-    end
-    
-    User((Public Traffic)) --> CA
-    CA --> CR
-    CR --> VPC_CONN
-    VPC_CONN --> DB
-    SM -.-> CR
-    KMS -.-> DB
-    CR -.-> MON
-    LOG --> BQ
-```
+**Sign-in without stored keys.** GitHub Actions authenticates to GCP with Workload Identity Federation, so there is no service account key to leak.
+
+**Security scans** run on every push to main:
+- `tfsec` and `Checkov` check the Terraform.
+- `Trivy` checks for known vulnerabilities.
+- `TruffleHog` and `Gitleaks` search the git history for secrets.
+- `OpenSSF Scorecard` audits the repo's practices.
+- Results are uploaded to the GitHub Security tab.
+
+**Cost estimates.** Infracost comments the cost change on pull requests that touch Terraform.
+
+**Tests.** `terraform test` checks the modules for configuration mistakes.
 
 ---
 
-## The Technology Stack
+## Preflight check
 
-Keystone utilizes industry-leading tools selected for their stability, security, and developer experience.
+`tools/preflight` is a small Go program that runs before Terraform. It checks GCP quotas, enabled APIs, IAM permissions and the state bucket, so a missing API fails in seconds instead of halfway through an apply. The checks run one after another and call `gcloud` or Terraform, so it is not fast yet. [Fill in: how long it takes on your machine, if you have measured it.]
 
-*   **Infrastructure:** Terraform (HCL), Google Cloud Platform (GCP).
-*   **Compute:** Google Cloud Run (Serverless Containers).
-*   **Database:** Cloud SQL (PostgreSQL) with High Availability (HA) and CMEK.
-*   **Storage:** Google Cloud Storage (GCS) with lifecycle policies.
-*   **Security:** Cloud Armor, Binary Authorization, KMS, Secret Manager, Workload Identity.
-*   **Observability:** Cloud Monitoring, Cloud Logging, BigQuery (Audit).
-*   **Tooling:** Go (Preflight utility), Make (Automation), Shell (Tooling).
-*   **CI/CD:** GitHub Actions, Infracost, Trivy, TruffleHog, Gitleaks.
+## Configra dev integration
+
+The dev environment can deploy the Configra API from [`clyvecute/configra`](https://github.com/clyvecute/configra). Configure `GCP_PROJECT_ID`, `WIF_PROVIDER`, and `WIF_SERVICE_ACCOUNT` as GitHub Actions secrets and bootstrap the dev Terraform state bucket first. Run the Keystone **Build** workflow with a Configra branch, tag, or commit in `configra_ref`; it builds and scans that Configra revision, then the deploy workflow applies the matching immutable image to dev and checks `/health` and `/ready`. Keystone pushes to `main` build Configra `main` automatically.
+
+The dev Cloud Run service uses private Cloud SQL connectivity. Database settings and credentials and the generated Configra API key are delivered to Cloud Run from Secret Manager; the API key is configured on the seeded default Configra project during startup. After deployment, `terraform output -raw service_url` gives the API base URL and `terraform output -raw configra_api_key_secret_id` gives the Secret Manager ID for client credentials. A Keystone-hosted service should call Configra server-side with `X-API-Key`, using its own Secret Manager binding for that API key. Do not expose the key to browser code. This integration does not deploy or alter production.
 
 ---
 
-## Operational Excellence (Day-2)
+## Common commands
 
-Infrastructure is only as good as its management. Keystone provides built-in targets for common operational tasks.
-
-| Operational Task | Command | Strategic Documentation |
-|:---|:---|:---|
-| **Identity Management** | `make setup-wif` | [Zero-Trust Identity Strategy](docs/security.md) |
-| **Security Auditing** | `make security-audit` | [Compliance & Detection](docs/security.md) |
-| **Secret Rotation** | `make rotate-secrets` | [Credentials Lifecycle](docs/security.md) |
-| **Data Recovery** | `make restore ID=...` | [Incident Response Playbooks](docs/how-things-break.md) |
-| **Cost Estimation** | `make plan ENV=prod` | [Economic Engineering](docs/STANDOUT.md) |
+| Task | Command |
+|:---|:---|
+| Set up keyless auth | `make setup-wif` |
+| Run the security checks locally | `make security-audit` |
+| Rotate secrets | `make rotate-secrets` |
+| Restore the database | `make restore ID=...` |
+| Preview changes and cost | `make plan ENV=prod` |
 
 ---
 
-## Strategic Design Decisions (Non-Goals)
+## Cost
 
-Keystone follows the principle of **Pragmatic Engineering**. We intentionally avoid complexity that doesn't provide immediate business ROI.
-
-*   **No Kubernetes:** For singular microservices, GKE adds 40% operational overhead with no performance gain over Cloud Run.
-*   **No Multi-Cloud:** "Cloud Agnostic" layers often lead to the "Lowest Common Denominator" problem, sacrificing deep provider-specific security features.
-*   **No Zero-Downtime Migrations:** While possible, maintenance windows are significantly more cost-effective for 99.9% of growth-stage applications.
-*   **Single-Region Optimization:** Multi-region adds 3x cost; Keystone prioritizes Regional HA with secondary-region backup strategies ($425/mo prod target).
+The production setup is estimated at about $425 per month and dev at about $25. These come from Infracost estimates, not from a real bill. [Fill in: the date of the estimate, or your actual bill if you have deployed it.] Most of the production cost is the regional HA database and the always-on Cloud Run instance.
 
 ---
 
-## Scaling Roadmap
+## Choices I made
 
-Keystone's production environment already configures Cloud Run to scale from one warm instance to 100, with 80 concurrent requests per instance, and uses a regional HA Cloud SQL instance. These are capacity controls, not a guarantee of a particular requests-per-day target: throughput depends on request duration, CPU and memory use, database connection behavior, quotas, and workload shape. Scale in measured steps and validate each change with representative load tests and the existing latency, error-rate, saturation, and cost monitoring.
+**Cloud Run, not Kubernetes.** This is meant for a single service. GKE adds cluster work I would not need here. [Fill in: your own reason or an experience, and drop the "40%" figure unless you can source it.]
 
-### 1. Establish a capacity baseline
+**GCP only.** Staying on one provider lets me use its security features directly instead of a lowest-common-denominator layer.
 
-Measure requests per second and latency percentiles, Cloud Run instance/concurrency utilization, Cloud SQL CPU and connections, and cost at expected peak traffic. Set explicit SLOs and alert thresholds, then load-test burst and sustained traffic. Tune Cloud Run concurrency and instance bounds to the application's measured behavior; increasing concurrency can worsen latency or exhaust database connections if the application or database pool is not sized for it. Confirm project quotas and regional capacity before raising maximum instances.
+**One region.** The database is highly available within a region, with backups in a second region. Going multi-region costs a lot more and I did not need it. [Fill in: the real backup setup.]
 
-### 2. Add an edge entry point when needed
-
-For global ingress, centralized TLS, Cloud Armor policy, and cacheable static or public responses, add a global external Application Load Balancer in front of Cloud Run. Cloud CDN only helps cache eligible responses; authenticated or personalized API responses should not be cached without a deliberate cache-key and privacy design. The current Terraform compute module deploys Cloud Run directly and does not provision this load balancer or CDN, so treat this as a separate infrastructure milestone and verify the chosen serverless NEG/backend configuration before rollout.
-
-### 3. Expand compute geographically only for a clear availability or latency need
-
-Deploy Cloud Run in a second region and route traffic through a global load balancer when measured user latency, regional resilience objectives, or recovery requirements justify the added operational and data-management complexity. Define health checks, rollout/failover behavior, secrets and networking per region, and database failover/replication strategy first. The current production configuration is single-region; multiple Cloud Run regions alone do not make a single-region database highly available across regions.
-
-### 4. Protect the database and move work off the request path
-
-First right-size Cloud SQL, tune indexes and connection pooling, and monitor connection count and query latency. Add read replicas only for suitable read-heavy workloads after checking replication lag and application consistency needs; replicas do not increase write capacity and require application routing changes. A Redis/ Memorystore cache is a later option for data with clear freshness and invalidation rules. Move slow, retryable work such as report generation or notifications to Pub/Sub or Cloud Tasks workers, with idempotency, bounded retries, and dead-letter handling. Consider Spanner only after the workload's write scale and multi-region consistency/availability needs exceed Cloud SQL's practical limits and a migration analysis supports the cost and data-model change.
-
-### 5. Scale platform operations with environment boundaries
-
-Keep separate projects and isolated Terraform state per environment. Add regional or tenant-specific state/configuration only when ownership and release processes require it; Terraform workspaces or Terragrunt do not by themselves provide isolation. Document promotion, rollback, disaster recovery, and quota ownership as part of each new environment.
-
-### 6. Keep preflight fast without hiding failures
-
-The Go preflight currently executes checks sequentially, and several checks invoke `gcloud` or Terraform subprocesses. If preflight duration becomes a CI bottleneck, parallelize independent checks with a bounded worker pool, per-check timeouts, and deterministic result ordering. Preserve required-versus-optional status and report each failure; measure before and after rather than assuming a sub-second target.
-
-Use this sequence as a decision path, not a default deployment checklist: collect a baseline, fix the measured bottleneck, and review the resulting reliability and cost before moving to the next stage.
+**Maintenance windows for migrations.** I accepted brief downtime during schema changes instead of building zero-downtime migrations.
 
 ---
 
-## Documentation Index
+## Not done yet
 
-*   [**Architecture Deep Dive**](docs/architecture.md) - System design and data flow.
-*   [**Deployment Guide**](docs/deployment.md) - End-to-end setup and automation.
-*   [**Security & Compliance**](docs/security.md) - Encryption, IAM, and network strategy.
-*   [**How Things Break**](docs/how-things-break.md) - Failure modes and recovery runbooks.
-*   [**Cost Analysis**](docs/STANDOUT.md) - Economic justification and ROI analysis.
+- The compute module deploys Cloud Run directly. There is no load balancer or CDN, so Cloud Armor and global TLS are not in front of it. Adding that is the next infrastructure step.
+- Nothing has been load tested, so the scaling numbers above are settings, not measured capacity.
+- This project has not been audited. The scanners find common problems, but the repo does not make anything SOC 2 or ISO 27001 compliant by itself.
+
+[Fill in: anything you know is unfinished, such as the restore command or the runbooks.]
 
 ---
 
-**Engineered by Keystone Infrastructure.** Built for growth, secured for the enterprise.
+## What broke while building it
+
+[Fill in: two or three real problems you hit and how you fixed them, for example a Workload Identity error, a permission you missed or a failed apply. This is the section that makes the README read as written by a person.]
+
+---
+
+## Docs
+
+- [Architecture](docs/architecture.md)
+- [Deployment guide](docs/deployment.md)
+- [Security](docs/security.md)
+- [How things break](docs/how-things-break.md)
+- [Cost analysis](docs/STANDOUT.md)
+
+---
+
+## License
+
+MIT

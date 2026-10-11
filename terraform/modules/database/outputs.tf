@@ -21,6 +21,7 @@ output "database_user" {
 output "password_secret_id" {
   description = "Secret Manager secret ID for database password"
   value       = google_secret_manager_secret.db_password.secret_id
+  depends_on  = [google_secret_manager_secret_version.db_password]
 }
 
 output "private_ip_address" {

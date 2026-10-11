@@ -8,6 +8,8 @@ resource "google_cloud_run_service" "app" {
 
   template {
     spec {
+      service_account_name = google_service_account.app.email
+
       containers {
         image = var.container_image
 
@@ -40,6 +42,19 @@ resource "google_cloud_run_service" "app" {
             value = env.value
           }
         }
+
+        dynamic "env" {
+          for_each = var.secret_env_vars
+          content {
+            name = env.key
+            value_source {
+              secret_key_ref {
+                secret  = env.value.secret_id
+                version = env.value.version
+              }
+            }
+          }
+        }
       }
 
       container_concurrency = var.container_concurrency
@@ -60,6 +75,8 @@ resource "google_cloud_run_service" "app" {
     percent         = 100
     latest_revision = true
   }
+
+  depends_on = [google_secret_manager_secret_iam_member.secret_access]
 
   lifecycle {
     ignore_changes = [
@@ -99,11 +116,13 @@ resource "google_project_iam_member" "app_metrics" {
   member  = "serviceAccount:${google_service_account.app.email}"
 }
 
-# Grant Secret Manager access to service account
-resource "google_project_iam_member" "app_secret_accessor" {
-  project = var.project_id
-  role    = "roles/secretmanager.secretAccessor"
-  member  = "serviceAccount:${google_service_account.app.email}"
+# Grant access only to the secrets this Cloud Run service consumes.
+resource "google_secret_manager_secret_iam_member" "secret_access" {
+  for_each  = var.secret_env_vars
+  project   = var.project_id
+  secret_id = each.value.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.app.email}"
 }
 
 # Binary Authorization policy for container image verification
