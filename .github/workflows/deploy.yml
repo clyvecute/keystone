@@ -1,16 +1,15 @@
 name: Deploy
 
+# Deploy is configured for manual execution (workflow_dispatch)
+# since provisioning live GCP infrastructure requires an active GCP billing account.
 on:
-  workflow_run:
-    workflows: ["Build"]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
         description: 'Environment to deploy to'
         required: true
         type: choice
+        default: dev
         options:
           - dev
           - prod
@@ -26,7 +25,7 @@ jobs:
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev'
     environment: dev
 
     permissions:
@@ -53,8 +52,12 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Set Configra image revision
-        if: github.event_name == 'workflow_run'
-        run: echo "CONFIGRA_SOURCE_REVISION=$(cat configra-source-revision.txt)" >> "$GITHUB_ENV"
+        run: |
+          if [ -f configra-source-revision.txt ]; then
+            echo "CONFIGRA_SOURCE_REVISION=$(cat configra-source-revision.txt)" >> "$GITHUB_ENV"
+          else
+            echo "CONFIGRA_SOURCE_REVISION=latest" >> "$GITHUB_ENV"
+          fi
 
       - name: Check Secrets
         run: |
