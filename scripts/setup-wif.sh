@@ -17,7 +17,7 @@ warn() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # Check gcloud authentication
-if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q "@"; then
+if ! gcloud config get-value account 2>/dev/null | grep -q "@"; then
     error "No active gcloud account found. Please run 'gcloud auth login' first."
     exit 1
 fi
@@ -92,6 +92,7 @@ else
         --workload-identity-pool="${POOL_NAME}" \
         --display-name="Keystone GitHub Provider" \
         --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+        --attribute-condition="assertion.repository=='${REPO_FULL}'" \
         --issuer-uri="https://token.actions.githubusercontent.com" \
         --project="${PROJECT_ID}"
     success "Provider created."
