@@ -86,7 +86,7 @@ jobs:
           cd terraform/environments/dev
           terraform plan -out=tfplan \
             -var="project_id=${{ env.GCP_PROJECT_ID }}" \
-            -var="container_image=gcr.io/$GCP_PROJECT_ID/configra:$CONFIGRA_SOURCE_REVISION"
+            -var="container_image=ghcr.io/${{ github.repository_owner }}/configra:$CONFIGRA_SOURCE_REVISION"
 
       - name: Terraform Apply
         run: |
@@ -165,7 +165,7 @@ jobs:
           cd terraform/environments/prod
           terraform plan -out=tfplan \
             -var="project_id=${{ env.GCP_PROJECT_ID }}" \
-            -var="container_image=gcr.io/${{ env.GCP_PROJECT_ID }}/configra:main-${{ github.sha }}"
+            -var="container_image=ghcr.io/${{ github.repository_owner }}/configra:main-${{ github.sha }}"
 
       - name: Terraform Apply
         if: env.WIF_PROVIDER != ''

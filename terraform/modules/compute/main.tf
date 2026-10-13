@@ -133,6 +133,10 @@ resource "google_binary_authorization_policy" "policy" {
     name_pattern = "gcr.io/${var.project_id}/*"
   }
 
+  admission_whitelist_patterns {
+    name_pattern = "ghcr.io/*"
+  }
+
   default_admission_rule {
     evaluation_mode  = var.environment == "prod" ? "REQUIRE_ATTESTATION" : "ALWAYS_ALLOW"
     enforcement_mode = "ENFORCED_BLOCK_AND_AUDIT_LOG"

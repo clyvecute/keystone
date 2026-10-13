@@ -12,12 +12,12 @@ on:
         default: main
 
 env:
-  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  GCP_REGION: us-central1
+  REGISTRY: ghcr.io
   IMAGE_NAME: configra
 
 permissions:
   contents: read
+  packages: write
   security-events: write
 
 jobs:
@@ -27,13 +27,8 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write
-
-    # Map secrets to env so they can be used in if: conditions
-    # (secrets context is not available in if: expressions)
-    env:
-      WIF_PROVIDER: ${{ secrets.WIF_PROVIDER }}
-      WIF_SERVICE_ACCOUNT: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      packages: write
+      security-events: write
 
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
@@ -51,52 +46,27 @@ jobs:
           ref: ${{ inputs.configra_ref || 'main' }}
           path: configra-src
 
-      - name: Check Secrets
-        run: |
-          test -n "$GCP_PROJECT_ID" || { echo "GCP_PROJECT_ID is required for Configra image publishing"; exit 1; }
-          test -n "$WIF_PROVIDER" || { echo "WIF_PROVIDER is required for Configra image publishing"; exit 1; }
-          test -n "$WIF_SERVICE_ACCOUNT" || { echo "WIF_SERVICE_ACCOUNT is required for Configra image publishing"; exit 1; }
-
-      - name: Authenticate to Google Cloud
-        id: auth
-        if: env.WIF_PROVIDER != ''
-        uses: google-github-actions/auth@v2
-        with:
-          token_format: 'access_token'
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
-      - name: Set up Cloud SDK
-        if: env.WIF_PROVIDER != ''
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker for GCR
-        if: env.WIF_PROVIDER != ''
-        run: gcloud auth configure-docker --quiet
-
-      - name: Login to GCR
-        if: env.WIF_PROVIDER != ''
-        uses: docker/login-action@v3
-        with:
-          registry: gcr.io
-          username: oauth2accesstoken
-          password: ${{ steps.auth.outputs.access_token }}
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=${{ steps.configra.outputs.commit }}
             type=raw,value=main
 
       - name: Build and push Docker image
         id: build
-        if: env.WIF_PROVIDER != ''
         uses: docker/build-push-action@v5
         with:
           context: configra-src
@@ -107,11 +77,9 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Save Configra source revision
-        if: env.WIF_PROVIDER != ''
         run: printf '%s' '${{ steps.configra.outputs.commit }}' > configra-source-revision.txt
 
       - name: Upload Configra source revision
-        if: env.WIF_PROVIDER != ''
         uses: actions/upload-artifact@v4
         with:
           name: configra-source-revision
@@ -119,15 +87,13 @@ jobs:
           retention-days: 7
 
       - name: Generate SBOM
-        if: env.WIF_PROVIDER != ''
         uses: anchore/sbom-action@v0
         with:
-          image: gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ steps.configra.outputs.commit }}
+          image: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.configra.outputs.commit }}
           format: spdx-json
           output-file: sbom.spdx.json
 
       - name: Upload SBOM
-        if: env.WIF_PROVIDER != ''
         uses: actions/upload-artifact@v4
         with:
           name: sbom
@@ -135,15 +101,16 @@ jobs:
           retention-days: 30
 
       - name: Scan image for vulnerabilities
-        if: env.WIF_PROVIDER != ''
         uses: aquasecurity/trivy-action@v0.35.0
         with:
-          image-ref: gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ steps.configra.outputs.commit }}
+          image-ref: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.configra.outputs.commit }}
           format: 'sarif'
           output: 'trivy-results.sarif'
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Trivy results to GitHub Security
-        if: env.WIF_PROVIDER != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: 'trivy-results.sarif'
