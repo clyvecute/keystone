@@ -5,6 +5,9 @@ name: Infrastructure Cost Analysis
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   infracost:
     name: Infracost Analysis
@@ -15,10 +18,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Setup Infracost
-        uses: infracost/actions/setup@v3
+        uses: infracost/actions/setup@e9d6e6cd65e168e76b0de50ff9957d2fe8bb1832 # v3
         with:
           api_key: ${{ secrets.INFRACOST_API_KEY }}
 
@@ -26,7 +29,7 @@ jobs:
         run: infracost breakdown --path terraform/environments/prod --format json --out-file /tmp/infracost.json
 
       - name: Post Infracost comment
-        uses: infracost/actions/comment@v3
+        uses: infracost/actions/comment@e9d6e6cd65e168e76b0de50ff9957d2fe8bb1832 # v3
         with:
           path: /tmp/infracost.json
           behavior: update
