@@ -1,0 +1,3 @@
+# crypto/tls: Denial of Service via multiple ECH outer extension references
+# Temporary ignore while awaiting upstream Configra base image update to Go 1.26.9+ / 1.27.2+
+CVE-2026-97031

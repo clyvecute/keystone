@@ -30,7 +30,6 @@ jobs:
 
     permissions:
       contents: read
-      actions: read
       id-token: write
 
     # Map secrets to env — secrets context cannot be used in if: expressions
@@ -42,14 +41,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download Configra source revision
-        if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v4
-        with:
-          name: configra-source-revision
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ github.token }}
 
       - name: Set Configra image revision
         run: |
