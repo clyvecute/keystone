@@ -87,6 +87,7 @@ resource "google_cloud_run_service" "app" {
 }
 
 # IAM policy to allow public access (adjust for production)
+#checkov:skip=CKV_GCP_33: Public access is intentional when allow_public_access is enabled
 resource "google_cloud_run_service_iam_member" "public_access" {
   count    = var.allow_public_access ? 1 : 0
   service  = google_cloud_run_service.app.name

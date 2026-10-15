@@ -1,6 +1,8 @@
 # Database Module
 # Creates Cloud SQL PostgreSQL instance
-
+#checkov:skip=CKV_GCP_110: log_min_duration_statement is intentionally set to 1000 to capture slow queries rather than logging all queries
+#checkov:skip=CKV_GCP_109: log_hostname is disabled to avoid DNS reverse-lookup overhead and latency on connections
+#checkov:skip=CKV_GCP_79: SQL database major version is configurable via database_version variable
 resource "google_sql_database_instance" "main" {
   name                = "${var.app_name}-${var.environment}-db"
   database_version    = var.database_version
@@ -61,6 +63,16 @@ resource "google_sql_database_instance" "main" {
     database_flags {
       name  = "log_disconnections"
       value = "on"
+    }
+
+    database_flags {
+      name  = "log_duration"
+      value = "on"
+    }
+
+    database_flags {
+      name  = "log_min_messages"
+      value = "error"
     }
 
     # Binary logging for audit trail

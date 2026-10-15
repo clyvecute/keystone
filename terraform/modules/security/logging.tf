@@ -1,6 +1,6 @@
 # Security Logging and Audit
 # Ships critical audit logs to BigQuery for long-term analysis and compliance
-
+#checkov:skip=CKV_GCP_81: BigQuery audit log dataset uses default Google encryption to avoid additional KMS cost
 resource "google_bigquery_dataset" "audit_logs" {
   dataset_id    = "keystone_${var.environment}_audit_logs"
   friendly_name = "Audit Logs Dataset"

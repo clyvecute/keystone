@@ -182,6 +182,17 @@ resource "google_compute_security_policy" "policy" {
     }
     description = "Block SQL injection attacks"
   }
+
+  rule {
+    action   = "deny(403)"
+    priority = "802"
+    match {
+      expr {
+        expression = "evaluatePreconfiguredExpr('cve-canary')"
+      }
+    }
+    description = "Block Log4j2 CVE-2021-44228 message lookup"
+  }
 }
 
 # VPC Serverless Connector for Cloud Run private access

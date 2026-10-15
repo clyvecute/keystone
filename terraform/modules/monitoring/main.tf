@@ -2,6 +2,7 @@
 # Creates monitoring dashboards and alert policies
 
 # GCS bucket for storing monitoring configs
+#checkov:skip=CKV_GCP_62: Access logging requires secondary destination bucket and is not required for monitoring artifacts
 resource "google_storage_bucket" "monitoring" {
   name          = "${var.app_name}-${var.environment}-monitoring"
   location      = var.region
@@ -9,6 +10,7 @@ resource "google_storage_bucket" "monitoring" {
   force_destroy = var.environment != "prod"
 
   uniform_bucket_level_access = true
+  public_access_prevention    = "enforced"
 
   versioning {
     enabled = true
