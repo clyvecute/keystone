@@ -100,12 +100,13 @@ jobs:
           curl --fail --retry 12 --retry-delay 5 --retry-connrefused "${{ steps.service-url.outputs.url }}/ready"
 
       - name: Notify Deployment
-        if: always() && env.SLACK_WEBHOOK != ''
+        if: always() && env.SLACK_WEBHOOK != '' && env.SLACK_WEBHOOK != 'disabled'
         uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e # v3
         with:
           status: ${{ job.status }}
           text: 'Dev deployment ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   deploy-prod:
     name: Deploy to Production
@@ -187,10 +188,11 @@ jobs:
           ./scripts/backup.sh
 
       - name: Notify Deployment
-        if: always() && env.SLACK_WEBHOOK != ''
+        if: always() && env.SLACK_WEBHOOK != '' && env.SLACK_WEBHOOK != 'disabled'
         uses: 8398a7/action-slack@77eaa4f1c608a7d68b38af4e3f739dcd8cba273e # v3
         with:
           status: ${{ job.status }}
           text: 'Production deployment ${{ job.status }}'
-          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
           fields: repo,message,commit,author,action,eventName,ref,workflow
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}

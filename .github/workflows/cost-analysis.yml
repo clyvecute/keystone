@@ -20,16 +20,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Check Infracost API Key
+        id: check-key
+        run: |
+          if [ -z "${{ secrets.INFRACOST_API_KEY }}" ] || [ "${{ secrets.INFRACOST_API_KEY }}" = "disabled" ]; then
+            echo "::warning::INFRACOST_API_KEY is not configured or disabled. Skipping cost analysis."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "### Infracost Cost Analysis" >> "$GITHUB_STEP_SUMMARY"
+            echo "Skipped: \`INFRACOST_API_KEY\` secret is not configured or is set to \`disabled\`." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Infracost
+        if: steps.check-key.outputs.enabled == 'true'
         uses: infracost/actions/setup@e9d6e6cd65e168e76b0de50ff9957d2fe8bb1832 # v3
         with:
-          api_key: ${{ secrets.INFRACOST_API_KEY }}
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
 
-      - name: Generate Infracost JSON
-        run: infracost breakdown --path terraform/environments/prod --format json --out-file /tmp/infracost.json
-
-      - name: Post Infracost comment
-        uses: infracost/actions/comment@e9d6e6cd65e168e76b0de50ff9957d2fe8bb1832 # v3
-        with:
-          path: /tmp/infracost.json
-          behavior: update
+      - name: Generate Infracost breakdown
+        if: steps.check-key.outputs.enabled == 'true'
+        run: |
+          infracost breakdown --path terraform/environments/prod --format table
+          infracost breakdown --path terraform/environments/prod --format markdown >> "$GITHUB_STEP_SUMMARY"

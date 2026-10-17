@@ -77,6 +77,14 @@ jobs:
       - name: Save Configra source revision
         run: printf '%s' '${{ steps.configra.outputs.commit }}' > configra-source-revision.txt
 
+      - name: Show image revision for deployment
+        run: |
+          {
+            echo "## Configra image ready"
+            echo "Deploy this exact image revision from the Deploy workflow: \`${{ steps.configra.outputs.commit }}\`."
+            echo "Image: \`ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.configra.outputs.commit }}\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload Configra source revision
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.1
         with:
